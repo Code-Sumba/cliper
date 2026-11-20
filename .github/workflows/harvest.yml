@@ -41,7 +41,8 @@ jobs:
           VER=$(curl -sS https://api.github.com/repos/lay295/TwitchDownloader/releases/latest | python3 -c "import sys,json;print(json.load(sys.stdin)['tag_name'])")
           echo "TwitchDownloader $VER"
           curl -sSL -o tdcli.zip "https://github.com/lay295/TwitchDownloader/releases/download/${VER}/TwitchDownloaderCLI-${VER#v}-Linux-x64.zip"
-          unzip -q tdcli.zip -d "$HOME/.local/bin"
+          mkdir -p "$HOME/.local/bin"
+          unzip -qo tdcli.zip -d "$HOME/.local/bin"
           chmod +x "$HOME/.local/bin/TwitchDownloaderCLI"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
