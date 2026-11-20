@@ -8,8 +8,8 @@ on:
     - cron: "23 13 * * *"      # once a day
   workflow_dispatch:
     inputs:
-      run_number:
-        description: "Harvest run number whose clips to publish (blank = latest)"
+      run_id:
+        description: "Harvest run ID to take clips from (blank = last 15 successful harvests)"
         required: false
 
 permissions:
@@ -34,15 +34,27 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Download clips from the latest harvest
-        uses: actions/download-artifact@v4
-        with:
-          pattern: clips-*
-          merge-multiple: true
-          path: clips/
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_number || '' }}
-        continue-on-error: true
+      # Clips live as artifacts on the harvest runs, not on this run, so
+      # download-artifact's default (current run only) would find nothing.
+      # An approved clip may come from any harvest in the 14-day retention
+      # window, so pull every recent one and flatten into clips/.
+      - name: Download clips from recent harvests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.inputs.run_id }}
+        run: |
+          mkdir -p clips
+          if [ -n "$RUN_ID" ]; then
+            ids="$RUN_ID"
+          else
+            ids=$(gh run list --workflow harvest.yml --status success --limit 15                     --json databaseId -q '.[].databaseId' || true)
+          fi
+          for id in $ids; do
+            gh run download "$id" --pattern 'clips-*' --dir "_dl/$id" 2>/dev/null               || echo "run $id: no clips (none made, or expired)"
+          done
+          find _dl -type f -name '*.mp4' -exec mv -n {} clips/ \; 2>/dev/null || true
+          rm -rf _dl
+          echo "clips available: $(ls clips | wc -l)"
 
       - name: Readiness check
         env:

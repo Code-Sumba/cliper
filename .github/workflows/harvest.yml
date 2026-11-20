@@ -95,4 +95,7 @@ jobs:
       - name: Summary
         run: |
           echo "### Clips queued" >> $GITHUB_STEP_SUMMARY
+          echo "Watch them: **Artifacts** at the bottom of this page. Approve: Actions -> **review** -> Run workflow." >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
           python -m cliper.review list pending >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
