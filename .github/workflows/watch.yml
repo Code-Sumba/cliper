@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write              # to commit state/ back to the repo
+  actions: write               # to start harvest.yml when there is work
 
 concurrency:
   group: cliper-watch
