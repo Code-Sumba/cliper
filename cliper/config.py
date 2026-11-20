@@ -52,6 +52,31 @@ def load_creators(path: Path | None = None) -> list[Creator]:
     return out
 
 
+def _load_dotenv(path: Path = ROOT / ".env") -> None:
+    """Read a local .env for desktop runs. Real environment variables win, so
+    GitHub Actions secrets are never overridden. Supports `KEY=value`, quoted
+    values and trailing `  # comments` as written in .env.example."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if value[:1] in {'"', "'"} and value[-1:] == value[:1] and len(value) > 1:
+            value = value[1:-1]
+        else:
+            for marker in (" #", "\t#"):
+                if marker in value:
+                    value = value.split(marker, 1)[0].rstrip()
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+_load_dotenv()
+
+
 def env(name: str, default: str = "") -> str:
     return os.environ.get(name, default).strip()
 
