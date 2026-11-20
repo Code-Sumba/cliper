@@ -86,11 +86,20 @@ class S3Storage:
 
     def _client(self):
         import boto3
+        from botocore.config import Config
 
         kwargs = {
             "aws_access_key_id": self.key_id,
             "aws_secret_access_key": self.secret,
             "region_name": self.region,
+            # boto3 >= 1.36 adds CRC checksums to every upload by default, which
+            # non-AWS services (Supabase, Backblaze, older MinIO) can reject.
+            # Path-style keeps the bucket out of the hostname, which they need too.
+            "config": Config(
+                request_checksum_calculation="when_required",
+                response_checksum_validation="when_required",
+                s3={"addressing_style": "path"},
+            ),
         }
         if self.endpoint:
             kwargs["endpoint_url"] = self.endpoint
