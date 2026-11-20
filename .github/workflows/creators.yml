@@ -1,0 +1,85 @@
+name: creators
+
+# The website's "Add creator" button opens the issue form in
+# .github/ISSUE_TEMPLATE/creator.yml. This applies it to creators.yml,
+# replies on the issue and closes it. Only the repo owner's issues are acted
+# on - on a public repo anyone can open an issue.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write               # to refresh the website afterwards
+
+concurrency:
+  group: cliper-state
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: contains(github.event.issue.labels.*.name, 'creator')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Only the owner may change creators
+        if: github.event.issue.user.login != github.repository_owner
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} \
+            -c "Only the repository owner can change the creator list." --reason "not planned"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Apply
+        id: apply
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          RESULT_FILE: ${{ runner.temp }}/result.md
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python -m cliper.creators from-issue
+        continue-on-error: true
+
+      - name: Commit
+        if: steps.apply.outcome == 'success'
+        env:
+          TITLE: ${{ github.event.issue.title }}     # never inline user text into a script
+          NUM: ${{ github.event.issue.number }}
+        run: |
+          git config user.name  "cliper-bot"
+          git config user.email "cliper-bot@users.noreply.github.com"
+          git add creators.yml state/
+          git diff --staged --quiet || git commit -m "creators: ${TITLE:0:60} (#$NUM) [skip ci]"
+          git pull --rebase && git push
+
+      - name: Reply and close
+        if: always() && github.event.issue.user.login == github.repository_owner
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MSG="$(cat '${{ runner.temp }}/result.md' 2>/dev/null || echo 'Something went wrong - see the workflow log.')"
+          if [ "${{ steps.apply.outcome }}" = "success" ]; then
+            MSG="$MSG"$'\n\n'"Watched from the next \`watch\` run (every 2 hours)."
+            gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} -c "$MSG"
+          else
+            gh issue comment ${{ github.event.issue.number }} -R ${{ github.repository }} -b "$MSG"$'\n\n'"Fix it by opening a new request."
+            gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} --reason "not planned"
+          fi
+
+      - name: Refresh the website
+        if: steps.apply.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run site.yml -R ${{ github.repository }} || true

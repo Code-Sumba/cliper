@@ -90,6 +90,8 @@ def harvest_stream(ref: StreamRef, creator) -> int:
                 "score": cand.score,
                 "chat_sample": cand.sample,
                 "look": look,
+                # Lets the website link straight to the run holding the video.
+                "run_id": env("GITHUB_RUN_ID"),
                 "meta": meta.as_dict(),
             })
             made += 1

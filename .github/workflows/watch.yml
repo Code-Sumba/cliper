@@ -33,6 +33,14 @@ jobs:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          # creator discovery (all optional)
+          DISCOVER:             ${{ vars.DISCOVER }}
+          DISCOVER_LANGUAGES:   ${{ vars.DISCOVER_LANGUAGES }}
+          DISCOVER_MAX_AUTO:    ${{ vars.DISCOVER_MAX_AUTO }}
+          DISCOVER_ADD_PER_DAY: ${{ vars.DISCOVER_ADD_PER_DAY }}
+          DISCOVER_DROP_DAYS:   ${{ vars.DISCOVER_DROP_DAYS }}
+          DISCOVER_MIN_VIEWERS: ${{ vars.DISCOVER_MIN_VIEWERS }}
+          DISCOVER_EXCLUDE:     ${{ vars.DISCOVER_EXCLUDE }}
         run: python -m cliper.watch
 
       - name: Commit state
@@ -40,7 +48,7 @@ jobs:
           git config user.name  "cliper-bot"
           git config user.email "cliper-bot@users.noreply.github.com"
           git add state/ || true
-          git diff --staged --quiet || git commit -m "watch: refresh pending streams [skip ci]"
+          git diff --staged --quiet || git commit -m "watch: streams + discovery [skip ci]"
           git push || true
 
       - name: Trigger harvest if there is work

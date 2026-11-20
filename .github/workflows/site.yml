@@ -1,0 +1,49 @@
+name: site
+
+# Rebuilds the dashboard (GitHub Pages) after anything changes the state.
+on:
+  workflow_run:
+    workflows: [watch, harvest, publish, review]
+    types: [completed]
+  push:
+    branches: [main]
+    paths: ["creators.yml", "cliper/**", "state/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main                # the latest state, including bot commits
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install PyYAML requests
+
+      - run: python -m cliper.site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

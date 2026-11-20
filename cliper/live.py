@@ -68,7 +68,9 @@ def twitch_token() -> str:
         raise RuntimeError("TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not set")
     r = requests.post(
         TWITCH_OAUTH,
-        params={"client_id": cid, "client_secret": secret, "grant_type": "client_credentials"},
+        # Form body, not query string: a URL with the secret in it ends up in
+        # exception messages and logs.
+        data={"client_id": cid, "client_secret": secret, "grant_type": "client_credentials"},
         timeout=20,
     )
     r.raise_for_status()
@@ -146,28 +148,62 @@ def youtube_is_live(channel_id: str) -> bool:
 
 
 def youtube_recent_uploads(channel_id: str, limit: int = 3) -> list[StreamRef]:
-    """Recent videos, which for a streamer are usually the stream archives.
+    """Recent finished livestreams on a channel.
 
-    Note the quota cost: a search call is 100 units of a 10,000/day default,
-    so poll a handful of creators, not hundreds.
+    2 quota units per call (uploads playlist + videos.list), not the 100 a
+    search costs - this runs every 2 hours for every YouTube creator, and the
+    same 10,000/day quota pays for Shorts uploads (~1,600 each).
+    Ordinary uploads and Shorts are skipped: only ended live broadcasts have
+    the chat replay the scorer needs.
     """
     key = env("YOUTUBE_API_KEY")
+    if not key:
+        raise RuntimeError("YOUTUBE_API_KEY not set")
+    uploads = "UU" + channel_id[2:]
     r = requests.get(
-        f"{YOUTUBE_API}/search",
-        params={"part": "snippet", "channelId": channel_id, "order": "date",
-                "type": "video", "maxResults": limit, "key": key},
+        f"{YOUTUBE_API}/playlistItems",
+        params={"part": "contentDetails", "playlistId": uploads,
+                "maxResults": 15, "key": key},
         timeout=20,
     )
     r.raise_for_status()
+    ids = [it["contentDetails"]["videoId"] for it in r.json().get("items", [])]
+    if not ids:
+        return []
+    v = requests.get(
+        f"{YOUTUBE_API}/videos",
+        params={"part": "snippet,liveStreamingDetails,contentDetails",
+                "id": ",".join(ids), "key": key},
+        timeout=20,
+    )
+    v.raise_for_status()
     out = []
-    for it in r.json().get("items", []):
-        vid = it["id"]["videoId"]
+    for it in v.json().get("items", []):
+        live = it.get("liveStreamingDetails") or {}
+        if not live.get("actualEndTime"):
+            continue                       # not a stream, or still live
+        vid = it["id"]
         out.append(StreamRef(
             creator=channel_id, platform="youtube", vod_id=vid,
             title=it["snippet"].get("title", ""),
             url=f"https://www.youtube.com/watch?v={vid}",
+            duration_seconds=_parse_iso_duration(it.get("contentDetails", {}).get("duration", "")),
         ))
+        if len(out) >= limit:
+            break
     return out
+
+
+def _parse_iso_duration(s: str) -> int:
+    """PT3H2M10S -> seconds."""
+    total, num = 0, ""
+    for ch in s.replace("PT", ""):
+        if ch.isdigit():
+            num += ch
+        else:
+            total += int(num or 0) * {"H": 3600, "M": 60, "S": 1}.get(ch, 0)
+            num = ""
+    return total
 
 
 # ---------------------------------------------------------------- driver
@@ -180,9 +216,9 @@ def find_new_streams(creators: list[Creator]) -> list[StreamRef]:
         try:
             refs: list[StreamRef] = []
             if c.twitch:
-                refs += twitch_latest_vods(c.twitch)
+                refs += twitch_latest_vods(c.twitch, c.vods_per_check)
             if c.youtube_channel_id:
-                refs += youtube_recent_uploads(c.youtube_channel_id)
+                refs += youtube_recent_uploads(c.youtube_channel_id, c.vods_per_check)
             for r in refs:
                 r.creator = c.handle
                 if r.key() not in seen:

@@ -25,7 +25,7 @@ creators:
   - handle: ishowspeed
     display_name: IShowSpeed
     twitch: null                      # streams on YouTube, not Twitch
-    youtube_channel_id: UCWsDFcIhY2DBi3GB5uykGHA
+    youtube_channel_id: UCWsDFcIhY2DBi3GB5uykGXA
     kick: null
     permission: none
     permission_note: >-

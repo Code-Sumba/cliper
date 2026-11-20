@@ -1,0 +1,58 @@
+name: Add / remove creator
+description: Add a creator to Cliper's watch list, remove one, or block one from auto-discovery.
+title: "creator: "
+labels: ["creator"]
+body:
+  - type: dropdown
+    id: action
+    attributes:
+      label: Action
+      options:
+        - Add
+        - Remove
+        - Block from auto-discovery
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where they stream. (Ignored for Remove / Block.)
+      options:
+        - twitch
+        - youtube
+    validations:
+      required: true
+  - type: input
+    id: channel
+    attributes:
+      label: Channel
+      description: Channel name, @handle or full link - e.g. `xqc`, `https://twitch.tv/xqc`, `@IShowSpeed`, `https://youtube.com/@IShowSpeed`
+    validations:
+      required: true
+  - type: dropdown
+    id: permission
+    attributes:
+      label: Permission
+      description: "none = clips wait for your approval. Only choose granted/campaign if you really have permission."
+      options:
+        - none
+        - granted
+        - campaign
+    validations:
+      required: true
+  - type: input
+    id: note
+    attributes:
+      label: Permission note
+      description: Evidence for granted/campaign (campaign link, DM date). Optional.
+  - type: input
+    id: ppw
+    attributes:
+      label: Posts per week
+      description: Max clips of this creator per week. Blank = default (3).
+  - type: input
+    id: platforms
+    attributes:
+      label: Post to
+      description: "Comma-separated: youtube, instagram, tiktok. Blank = every connected platform."

@@ -11,3 +11,4 @@ clips/
 # local secrets
 youtube_token.json
 .env
+_site/

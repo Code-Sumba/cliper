@@ -13,6 +13,7 @@ CREATORS_FILE = ROOT / "creators.yml"
 STATE_DIR = ROOT / "state"
 WORK_DIR = ROOT / "work"
 CLIPS_DIR = ROOT / "clips"
+AUTO_CREATORS_FILE = STATE_DIR / "auto_creators.json"   # written by discover.py
 
 # Permission levels that may ever be auto-published.
 PUBLISHABLE = {"campaign", "granted"}
@@ -33,22 +34,38 @@ class Creator:
     pre_roll: int = 10
     max_candidates: int = 20
     post_per_week: int = 3
+    source: str = "manual"          # manual (creators.yml) | auto (discover.py)
+    vods_per_check: int = 3         # newest VODs looked at per watch run
 
     @property
     def may_auto_publish(self) -> bool:
         return self.permission in PUBLISHABLE
 
 
-def load_creators(path: Path | None = None) -> list[Creator]:
+def load_creators(path: Path | None = None, include_auto: bool = True) -> list[Creator]:
+    """creators.yml, plus auto-discovered creators from state/ (review-only)."""
     data = yaml.safe_load((path or CREATORS_FILE).read_text(encoding="utf-8"))
     defaults = data.get("defaults", {}) or {}
+    allowed = Creator.__dataclass_fields__.keys()
     out: list[Creator] = []
     for raw in data.get("creators", []) or []:
         merged = {**defaults, **{k: v for k, v in raw.items() if v is not None}}
         merged.setdefault("permission", "none")
         merged.setdefault("permission_note", "")
-        allowed = Creator.__dataclass_fields__.keys()
         out.append(Creator(**{k: v for k, v in merged.items() if k in allowed}))
+
+    if include_auto and path is None and AUTO_CREATORS_FILE.exists():
+        import json
+        handles = {c.handle for c in out}
+        channels = {c.twitch.lower() for c in out if c.twitch} | {c.youtube_channel_id for c in out if c.youtube_channel_id}
+        for raw in json.loads(AUTO_CREATORS_FILE.read_text(encoding="utf-8")):
+            if (raw.get("handle") in handles
+                    or (raw.get("twitch") or "").lower() in channels
+                    or (raw.get("youtube_channel_id") or "") in channels):
+                continue        # a manual entry always wins
+            merged = {**defaults, **raw, "permission": "none", "source": "auto",
+                      "vods_per_check": 1}   # never auto-publish; newest VOD only
+            out.append(Creator(**{k: v for k, v in merged.items() if k in allowed}))
     return out
 
 
