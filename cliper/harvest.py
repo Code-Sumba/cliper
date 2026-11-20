@@ -13,7 +13,7 @@ from .audio import curve_for_stream
 from .chat import download_twitch_chat, find_candidates, load_twitchdownloader_json
 from .config import CLIPS_DIR, STATE_DIR, WORK_DIR, ensure_dirs, env, load_creators
 from .fetch import check_tools, fetch_candidates
-from .live import StreamRef, mark_seen
+from .live import StreamRef, load_seen, mark_seen
 from .meta import build_meta
 from .queue import add as queue_add
 from .render import build_ass, render_framed, transcribe
@@ -115,6 +115,11 @@ def main() -> int:
 
     by_handle = {c.handle: c for c in load_creators()}
     pending = [StreamRef(**d) for d in json.loads(PENDING_FILE.read_text(encoding="utf-8"))]
+    # A watch run that fires while an earlier harvest is still working lists
+    # the same streams again (they are only marked seen when it finishes).
+    # This run starts from the latest commit, so skip anything already done.
+    seen = load_seen()
+    pending = [r for r in pending if r.key() not in seen]
     total = 0
     for ref in pending[:MAX_STREAMS_PER_RUN]:
         creator = by_handle.get(ref.creator)

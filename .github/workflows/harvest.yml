@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 330       # under the 6-hour job ceiling
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Free up disk
         # A stock runner has ~14 GB free. Dropping the preinstalled Android and
@@ -95,7 +97,7 @@ jobs:
           git config user.email "cliper-bot@users.noreply.github.com"
           git add state/ || true
           git diff --staged --quiet || git commit -m "harvest: queue clips for review [skip ci]"
-          git push || true
+          for i in 1 2 3 4; do git pull --rebase -q && git push -q && break; echo "push retry $i"; sleep $((i*5)); done
 
       - name: Summary
         run: |
