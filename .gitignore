@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+work/
+clips/
+*.mp4
+*.wav
+*.json.gz
+
+# local secrets
+youtube_token.json
+.env

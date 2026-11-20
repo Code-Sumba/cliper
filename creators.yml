@@ -1,0 +1,73 @@
+# Who Cliper watches.
+#
+# `permission` is enforced by the pipeline, not decorative. A creator whose
+# permission is `none` gets clipped into the review queue but can never be
+# auto-published — publish.py refuses it. Set it honestly.
+#
+#   campaign : a live clipping campaign covers these streams. Put the campaign
+#              rules in `campaign:` and the pipeline checks clips against them.
+#   granted  : the creator gave you permission directly. Put the evidence in
+#              `permission_note` (DM date, email, programme URL).
+#   none     : no permission. Review-queue only. You decide clip by clip.
+#
+# Weekly cadence: `post_per_week` caps how many clips of this creator the
+# publisher will push, so one creator can't eat your whole posting schedule.
+
+defaults:
+  clip_seconds: 38          # final clip length
+  pre_roll: 10              # seconds before the chat spike to start the cut
+  max_candidates: 20        # spikes scored per stream
+  post_per_week: 3
+  platforms: []             # [] = every platform whose credentials are set.
+                            # Or name them: [youtube, instagram, tiktok]
+
+creators:
+  - handle: ishowspeed
+    display_name: IShowSpeed
+    twitch: null                      # streams on YouTube, not Twitch
+    youtube_channel_id: UCWsDFcIhY2DBi3GB5uykGHA
+    kick: null
+    permission: none
+    permission_note: >-
+      No official clipping programme verified as of 17 Oct 2026. The only paid
+      route found was the IShowSpeed x Expedia campaign run by the agency Reach
+      ($1/1000 views, Unpack Stream 14 Oct 2026 footage only). Outside a
+      campaign this is ordinary copyright - review queue only.
+    post_per_week: 3
+    platforms: [instagram, tiktok]   # kept off YouTube: the reused-content
+                                     # policy is judged channel-wide
+
+  - handle: thedonato
+    display_name: TheDonato
+    twitch: thedonato
+    youtube_channel_id: null
+    kick: null
+    permission: none
+    permission_note: >-
+      Not yet checked. Before publishing anything, confirm whether a campaign
+      covers these streams or ask for permission directly.
+    post_per_week: 2
+
+# Example of a creator you ARE cleared to publish. Copy this shape once you
+# join a campaign - the pipeline will then auto-publish within these rules.
+#
+#  - handle: example_campaign_creator
+#    display_name: Example Creator
+#    twitch: example
+#    youtube_channel_id: null
+#    permission: campaign
+#    permission_note: "Joined via Content Rewards, campaign id ABC123, ends 2026-12-31"
+#    campaign:
+#      source_restriction: "Only the stream of 2026-10-14"
+#      required_hashtags: ["#example", "#sponsor"]
+#      required_mentions: ["@example"]
+#      banned_terms: ["giveaway", "free money"]
+#      allowed_platforms: ["instagram", "youtube"]
+#      min_length_seconds: 15
+#    platforms: [instagram, youtube, tiktok]
+#    post_per_week: 5
+#
+# Platforms available: youtube, instagram, tiktok, webhook, kick.
+# `kick` is registered but reports itself unconfigured - Kick has no
+# documented posting API. Adding a new one is a single file in
+# cliper/platforms/; nothing else changes.

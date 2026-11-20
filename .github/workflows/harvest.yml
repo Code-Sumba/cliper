@@ -1,0 +1,98 @@
+name: harvest
+
+# Chat -> spikes -> segment download -> vertical render.
+# The heavy one. Never downloads a full VOD; see cliper/fetch.py.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "43 3 * * *"       # nightly catch-up
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cliper-harvest
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330       # under the 6-hour job ceiling
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free up disk
+        # A stock runner has ~14 GB free. Dropping the preinstalled Android and
+        # .NET toolchains buys back roughly 20 GB of headroom for video work.
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          df -h /
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: Install TwitchDownloaderCLI
+        run: |
+          VER=$(curl -sS https://api.github.com/repos/lay295/TwitchDownloader/releases/latest | python3 -c "import sys,json;print(json.load(sys.stdin)['tag_name'])")
+          echo "TwitchDownloader $VER"
+          curl -sSL -o tdcli.zip "https://github.com/lay295/TwitchDownloader/releases/download/${VER}/TwitchDownloaderCLI-${VER#v}-Linux-x64.zip"
+          unzip -q tdcli.zip -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/TwitchDownloaderCLI"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: pip install -r requirements.txt
+
+      - name: Cache the face model
+        uses: actions/cache@v4
+        with:
+          path: ~/.streamclips/models
+          key: streamclips-models-v1
+
+      - name: Fetch the face model
+        # YuNet, used by vendor/sc/frame.py to find the facecam. The opencv_zoo
+        # copy is Git LFS, so the media endpoint is the one that returns the
+        # real file rather than a 378-byte pointer.
+        run: |
+          mkdir -p ~/.streamclips/models
+          if [ ! -s ~/.streamclips/models/face_yunet.onnx ]; then
+            curl -sSL -o ~/.streamclips/models/face_yunet.onnx \
+              "https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
+          fi
+          ls -la ~/.streamclips/models/
+
+      - name: Readiness check
+        run: python -m cliper.doctor || true
+
+      - name: Harvest clips
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          CLIPER_VOLUME: ${{ vars.CLIPER_VOLUME }}
+        run: python -m cliper.harvest
+
+      - name: Upload clips for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: clips-${{ github.run_number }}
+          path: clips/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Commit queue
+        run: |
+          git config user.name  "cliper-bot"
+          git config user.email "cliper-bot@users.noreply.github.com"
+          git add state/ || true
+          git diff --staged --quiet || git commit -m "harvest: queue clips for review [skip ci]"
+          git push || true
+
+      - name: Summary
+        run: |
+          echo "### Clips queued" >> $GITHUB_STEP_SUMMARY
+          python -m cliper.review list pending >> $GITHUB_STEP_SUMMARY || true
