@@ -74,6 +74,10 @@ jobs:
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           CLIPER_VOLUME: ${{ vars.CLIPER_VOLUME }}
+          # titles/captions (optional; templates when unset)
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
         run: python -m cliper.harvest
 
       - name: Upload clips for review

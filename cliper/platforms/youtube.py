@@ -55,7 +55,7 @@ class YouTube(Publisher):
         body = {
             "snippet": {
                 "title": meta.get("title", "")[:100],
-                "description": meta.get("caption", "")[:4900],
+                "description": (meta.get("description") or meta.get("caption", ""))[:4900],
                 "tags": meta.get("keywords", [])[:15],
                 "categoryId": env("YOUTUBE_CATEGORY_ID", "20"),   # 20 = Gaming
             },

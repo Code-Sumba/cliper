@@ -70,6 +70,7 @@ class TikTok(Publisher):
                 "disable_comment": False,
                 "disable_duet": False,
                 "disable_stitch": False,
+                "video_cover_timestamp_ms": int(meta.get("cover_ms", 0) or 0),
             }
 
         r = requests.post(endpoint, headers=self._headers(), json=payload, timeout=60)

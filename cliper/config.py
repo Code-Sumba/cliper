@@ -78,7 +78,9 @@ _load_dotenv()
 
 
 def env(name: str, default: str = "") -> str:
-    return os.environ.get(name, default).strip()
+    # GitHub passes an unset `vars.X` as an empty string, so empty must mean
+    # "use the default" - otherwise YOUTUBE_PRIVACY="" reaches the API.
+    return os.environ.get(name, "").strip() or default
 
 
 def auto_publish_enabled() -> bool:

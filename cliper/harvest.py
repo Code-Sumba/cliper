@@ -64,12 +64,17 @@ def harvest_stream(ref: StreamRef, creator) -> int:
     cam_memory: dict = {}   # frame.plan reuses a stream's facecam box across clips
     for cand, raw in fetch_candidates(ref.url, cands, WORK_DIR, ref.vod_id):
         try:
+            # Transcribe first: the title and caption are written from what
+            # was actually said, not from a template.
+            words = transcribe(raw)
+            subs = build_ass(words, WORK_DIR / f"{raw.stem}.ass")
             meta = build_meta(
                 creator.display_name, cand, ref.title,
                 campaign_hashtags=(creator.campaign or {}).get("required_hashtags"),
+                transcript=" ".join(w["text"] for w in words),
+                source_platform=ref.platform,
+                pre_roll=creator.pre_roll,
             )
-            words = transcribe(raw)
-            subs = build_ass(words, WORK_DIR / f"{raw.stem}.ass")
             final = CLIPS_DIR / f"{ref.vod_id}_{cand.offset_seconds}.mp4"
             _, look = render_framed(
                 raw, final, subtitles=subs, title=meta.hook, memory=cam_memory,

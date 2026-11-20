@@ -47,6 +47,8 @@ class Instagram(Publisher):
                 "video_url": public_url,
                 "caption": meta.get("caption", "")[:2200],
                 "share_to_feed": env("IG_SHARE_TO_FEED", "true"),
+                # Cover frame: just after the chat spike, not the first frame.
+                "thumb_offset": str(int(meta.get("cover_ms", 0) or 0)),
                 "access_token": token,
             },
             timeout=60,
@@ -80,4 +82,12 @@ class Instagram(Publisher):
         if not p.ok:
             raise PublishError(f"instagram publish failed: {p.text[:300]}")
         pid = p.json()["id"]
-        return PostResult(self.name, pid, f"https://www.instagram.com/reel/{pid}/")
+        # The media id is not the shortcode in the public URL; ask for it.
+        link = ""
+        try:
+            q = requests.get(f"{GRAPH}/{pid}", params={"fields": "permalink", "access_token": token},
+                             timeout=30)
+            link = q.json().get("permalink", "") if q.ok else ""
+        except requests.RequestException:
+            pass
+        return PostResult(self.name, pid, link)
