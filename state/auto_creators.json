@@ -6,7 +6,7 @@
     "twitch": "zackrawrr",
     "youtube_channel_id": null,
     "added": "2026-11-20",
-    "last_top": "2026-11-20",
+    "last_top": "2026-11-21",
     "permission_note": "Auto-discovered 2026-11-20: ~93,160 hours watched in 24h, avg 46,580 viewers. No permission - review only."
   },
   {
@@ -16,7 +16,27 @@
     "twitch": "ohnepixel",
     "youtube_channel_id": null,
     "added": "2026-11-20",
-    "last_top": "2026-11-20",
+    "last_top": "2026-11-21",
     "permission_note": "Auto-discovered 2026-11-20: ~89,124 hours watched in 24h, avg 44,562 viewers. No permission - review only."
+  },
+  {
+    "key": "twitch:caseoh_",
+    "handle": "caseoh_",
+    "display_name": "caseoh_",
+    "twitch": "caseoh_",
+    "youtube_channel_id": null,
+    "added": "2026-11-21",
+    "last_top": "2026-11-21",
+    "permission_note": "Auto-discovered 2026-11-21: ~334,082 hours watched in 24h, avg 55,680 viewers. No permission - review only."
+  },
+  {
+    "key": "twitch:theburntpeanut",
+    "handle": "theburntpeanut",
+    "display_name": "TheBurntPeanut",
+    "twitch": "theburntpeanut",
+    "youtube_channel_id": null,
+    "added": "2026-11-21",
+    "last_top": "2026-11-21",
+    "permission_note": "Auto-discovered 2026-11-21: ~203,990 hours watched in 24h, avg 50,997 viewers. No permission - review only."
   }
 ]
