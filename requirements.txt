@@ -11,7 +11,8 @@ faster-whisper>=1.1.0
 av>=11,<19
 
 # Framing engine (vendor/sc): face detection, title cards
-opencv-python-headless>=4.10.0
+# <5: OpenCV 5 dropped CascadeClassifier, frame.py's fallback face detector
+opencv-python-headless>=4.10.0,<5
 numpy>=1.26.0
 pillow>=10.4.0
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 from . import ytchat
@@ -23,9 +24,27 @@ PENDING_FILE = STATE_DIR / "pending_streams.json"
 MAX_STREAMS_PER_RUN = 2       # keep inside the runner's 6-hour job limit
 USE_VOLUME = env("CLIPER_VOLUME", "true").lower() in {"1", "true", "yes"}
 
+# GitHub kills the job at 330 min (timeout-minutes). Leave room to upload the
+# clips and commit the queue, or the whole run's work is thrown away.
+START = time.time()
+NO_NEW_STREAM_AFTER = 150 * 60    # don't start another stream after 2.5 h
+STOP_RENDERING_AFTER = 290 * 60   # finish up, keep what is done
+
+
+def _elapsed() -> str:
+    m = int((time.time() - START) // 60)
+    return f"{m // 60}h{m % 60:02d}m"
+
+
+def clips_per_stream() -> int:
+    try:
+        return max(1, int(env("CLIPS_PER_STREAM", "8")))
+    except ValueError:
+        return 8
+
 
 def harvest_stream(ref: StreamRef, creator) -> int:
-    print(f"[harvest] {ref.creator} {ref.platform}:{ref.vod_id}")
+    print(f"[harvest] {_elapsed()} {ref.creator} {ref.platform}:{ref.vod_id}")
 
     if ref.platform == "twitch":
         chat_path = WORK_DIR / f"{ref.vod_id}_chat.json"
@@ -46,7 +65,7 @@ def harvest_stream(ref: StreamRef, creator) -> int:
         pre_roll=creator.pre_roll,
         max_candidates=creator.max_candidates,
     )
-    print(f"[harvest] {len(messages)} chat messages -> {len(cands)} candidates")
+    print(f"[harvest] {_elapsed()} {len(messages)} chat messages -> {len(cands)} candidates")
     if not cands:
         return 0
 
@@ -55,7 +74,8 @@ def harvest_stream(ref: StreamRef, creator) -> int:
     # 5-hour stream costs ~250 MB rather than tens of gigabytes.
     curve = curve_for_stream(ref.url, WORK_DIR, ref.vod_id) if USE_VOLUME else []
     before = [c.offset_seconds for c in cands[:3]]
-    cands = blend(cands, volume_curve=curve)
+    cands = blend(cands, volume_curve=curve)[:clips_per_stream()]
+    print(f"[harvest] {_elapsed()} rendering the best {len(cands)}")
     if curve and [c.offset_seconds for c in cands[:3]] != before:
         print(f"[harvest] volume re-ranked the top picks: {before} -> "
               f"{[c.offset_seconds for c in cands[:3]]}")
@@ -63,6 +83,10 @@ def harvest_stream(ref: StreamRef, creator) -> int:
     made = failed = 0
     cam_memory: dict = {}   # frame.plan reuses a stream's facecam box across clips
     for cand, raw in fetch_candidates(ref.url, cands, WORK_DIR, ref.vod_id):
+        if time.time() - START > STOP_RENDERING_AFTER:
+            print(f"[harvest] {_elapsed()} time budget reached, keeping {made} clip(s)")
+            raw.unlink(missing_ok=True)
+            break
         try:
             # Transcribe first: the title and caption are written from what
             # was actually said, not from a template.
@@ -127,6 +151,9 @@ def main() -> int:
     pending = [r for r in pending if not is_done(seen.get(r.key()))]
     total = 0
     for ref in pending[:MAX_STREAMS_PER_RUN]:
+        if time.time() - START > NO_NEW_STREAM_AFTER:
+            print(f"[harvest] {_elapsed()} not starting {ref.key()}: next run will")
+            break
         creator = by_handle.get(ref.creator)
         if not creator:
             continue

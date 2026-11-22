@@ -112,11 +112,11 @@ def render_vertical(
     if hook_text:
         safe = hook_text.replace(":", "\\:").replace("'", "")[:60]
         vf += (
-            f",drawtext=text='{safe}':fontcolor=white:fontsize=72:"
+            f",drawtext=text='{safe}':{_fontfile()}fontcolor=white:fontsize=72:"
             f"borderw=5:bordercolor=black:x=(w-text_w)/2:y=200"
         )
     if subtitles:
-        vf += f",subtitles='{subtitles.as_posix()}'"
+        vf += f",subtitles='{_filter_path(subtitles)}'"
 
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(src), "-vf", vf,
@@ -194,7 +194,7 @@ def render_framed(
     inputs = ["-i", str(src)]
 
     if subtitles:
-        chain += f";[framed]subtitles='{subtitles.as_posix()}'[subbed]"
+        chain += f";[framed]subtitles='{_filter_path(subtitles)}'[subbed]"
         out_label = "subbed"
 
     if title:
@@ -220,3 +220,19 @@ def render_framed(
         check=True, capture_output=True,
     )
     return dest, look
+
+
+def _filter_path(p: Path) -> str:
+    """ffmpeg filter args treat ':' as a separator, so 'D:/x.ass' must be 'D\:/x.ass'."""
+    return p.as_posix().replace(":", "\:")
+
+
+def _fontfile() -> str:
+    """Windows ffmpeg builds have no fontconfig, so drawtext needs an explicit
+    font file. Linux runners (fonts-dejavu) find one by themselves."""
+    import os
+    if os.name == "nt":
+        for f in (r"C:\Windows\Fonts\arialbd.ttf", r"C:\Windows\Fonts\arial.ttf"):
+            if os.path.exists(f):
+                return f"fontfile='{_filter_path(Path(f))}':"
+    return ""

@@ -81,6 +81,8 @@ jobs:
 
       - name: Harvest clips
         env:
+          PYTHONUNBUFFERED: "1"      # timestamps in the log, not one dump at the end
+          CLIPS_PER_STREAM: ${{ vars.CLIPS_PER_STREAM }}
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}

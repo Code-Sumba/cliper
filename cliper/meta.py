@@ -39,7 +39,13 @@ _CLEAN = re.compile(r"[^a-z0-9]+")
 _STOP = set("""a an the and or but if then so to of in on at for with from by is are was
 were be been it its this that these those i you he she we they me my your his her our
 their im youre dont cant just like yeah oh uh um okay ok gonna wanna what why how when
-where who not no yes do did does have has had get got go going lol bro""".split())
+where who not no yes do did does have has had get got go going lol bro
+about after again all also always any back because before being can come could
+even ever every from here into know let look make more much need never now only
+other over really right said say see should some still sure take than thing think
+though through time too very want way well went what whole will would yeah yo
+alright actually literally gonna gotta kinda wait guys chat okay maybe something
+nothing everything anything someone everyone people there their these those where while""" .split())
 
 
 @dataclass
@@ -75,7 +81,7 @@ def _uniq(items):
 def _topic_words(text: str, n: int = 4) -> list[str]:
     """Most frequent meaningful words in the transcript - cheap keywording."""
     counts: dict[str, int] = {}
-    for w in re.findall(r"[a-zA-Z']{4,}", text.lower()):
+    for w in re.findall(r"[a-zA-Z']{5,}", text.lower()):
         w = w.strip("'")
         if w not in _STOP:
             counts[w] = counts.get(w, 0) + 1
