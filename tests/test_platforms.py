@@ -167,3 +167,20 @@ def test_set_status_persists_extra_fields(tmp_path, monkeypatch):
     item = queue.list_items()[0]
     assert item["published_at"] == 123 and item["posts"][0]["url"] == "u"
     assert queue.posted_this_week("c", now=200) == 1
+
+
+def test_storage_errors_are_wrapped(tmp_path, monkeypatch):
+    from unittest import mock
+    import pytest
+    from cliper import storage
+    for k, v in {"S3_BUCKET": "b", "S3_ACCESS_KEY_ID": "k", "S3_SECRET_ACCESS_KEY": "s",
+                 "S3_PUBLIC_BASE": "https://x"}.items():
+        monkeypatch.setenv(k, v)
+    st = storage.S3Storage()
+    f = tmp_path / "c.mp4"
+    f.write_bytes(b"x")
+    client = mock.Mock()
+    client.put_object.side_effect = RuntimeError("520")
+    monkeypatch.setattr(st, "_client", lambda: client)
+    with pytest.raises(storage.StorageError):
+        st.upload(f)

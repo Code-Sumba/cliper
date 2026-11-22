@@ -99,6 +99,8 @@ class S3Storage:
                 request_checksum_calculation="when_required",
                 response_checksum_validation="when_required",
                 s3={"addressing_style": "path"},
+                # Supabase sits behind Cloudflare, which throws the odd 520.
+                retries={"max_attempts": 6, "mode": "standard"},
             ),
         }
         if self.endpoint:
@@ -111,10 +113,16 @@ class S3Storage:
             raise StorageError(f"s3 storage not ready: {why}")
         key = key or f"{self.prefix}/{path.name}" if self.prefix else (key or path.name)
         ctype = mimetypes.guess_type(path.name)[0] or "video/mp4"
-        self._client().upload_file(
-            str(path), self.bucket, key,
-            ExtraArgs={"ContentType": ctype, "CacheControl": "public, max-age=86400"},
-        )
+        # One PUT, not multipart: a sub-minute clip is well under 50 MB, and
+        # Supabase's multipart UploadPart is where the 520s came from.
+        try:
+            with path.open("rb") as fh:
+                self._client().put_object(
+                    Bucket=self.bucket, Key=key, Body=fh,
+                    ContentType=ctype, CacheControl="public, max-age=86400",
+                )
+        except Exception as exc:          # botocore/boto3 errors -> one type for callers
+            raise StorageError(f"upload of {path.name} failed: {type(exc).__name__}: {exc}") from exc
         return f"{self.public_base.rstrip('/')}/{key}"
 
 

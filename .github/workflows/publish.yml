@@ -133,6 +133,7 @@ jobs:
         run: python -m cliper.publish
 
       - name: Commit queue
+        if: always()                 # a crash after a post must still record it
         run: |
           git config user.name  "cliper-bot"
           git config user.email "cliper-bot@users.noreply.github.com"

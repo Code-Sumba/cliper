@@ -115,6 +115,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Commit queue
+        if: always()
         run: |
           git config user.name  "cliper-bot"
           git config user.email "cliper-bot@users.noreply.github.com"

@@ -128,7 +128,7 @@ def main() -> int:
             try:
                 public_url = storage.upload(clip)
                 print(f"[publish] uploaded -> {public_url}")
-            except StorageError as exc:
+            except Exception as exc:      # never let storage take YouTube down with it
                 print(f"[publish] upload failed for {item['id']}: {exc}")
 
         results, posts = [], []
