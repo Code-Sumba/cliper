@@ -67,8 +67,11 @@ def build() -> Path:
         "meta_source": (i.get("meta") or {}).get("source", ""),
         "run_url": f"https://github.com/{repo}/actions/runs/{i['run_id']}" if i.get("run_id") else "",
         "created": i.get("created_at", 0),
-    } for i in items if i.get("status") in {"pending", "approved"}
-        or (i.get("status") == "published" and i.get("published_at", 0) >= week_ago)]
+        "posts": i.get("posts", []),
+        "published_at": i.get("published_at", 0),
+    } for i in items if i.get("status") in {"pending", "approved", "published"}]
+    posted = sorted((q for q in queue if q["status"] == "published"), key=lambda q: -q["published_at"])[:40]
+    queue = [q for q in queue if q["status"] != "published"]
     queue.sort(key=lambda q: (q["status"] != "pending", -q["created"]))
 
     data = {
@@ -77,6 +80,7 @@ def build() -> Path:
         "discovery_updated": load_db().get("updated", 0),
         "links": {
             "add": creator_form(repo, "Add"),
+            "clips_form": f"https://github.com/{repo}/issues/new?template=clips.yml",
             "review": f"https://github.com/{repo}/actions/workflows/review.yml",
             "watch": f"https://github.com/{repo}/actions/workflows/watch.yml",
             "publish": f"https://github.com/{repo}/actions/workflows/publish.yml",
@@ -94,6 +98,7 @@ def build() -> Path:
         } for c in creators],
         "board": board,
         "queue": queue,
+        "posted": posted,
         "counts": {
             "pending": sum(1 for i in items if i.get("status") == "pending"),
             "approved": sum(1 for i in items if i.get("status") == "approved"),
@@ -150,6 +155,9 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chip.acc{color:#b9a8ff;border-color:var(--acc)}
 .name a{font-weight:600;text-decoration:none}.small{color:var(--mute);font-size:12px;max-width:340px;
 overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.up{color:var(--ok)}.down{color:#ff6b6b}
+.bulk{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+padding:10px 16px;border-bottom:1px solid var(--line);background:#1b2030;position:sticky;top:73px;z-index:1}
+.bulk .btn[aria-disabled=true]{opacity:.4;pointer-events:none}input[type=checkbox]{width:17px;height:17px;accent-color:var(--acc)}
 .empty{padding:22px 16px;color:var(--mute)}.help{color:var(--mute);font-size:12px;padding:10px 16px 14px}
 </style>
 </head>
@@ -163,8 +171,17 @@ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.up{color:var(--ok)}.d
 
   <section>
     <h2>Clip queue <span class="row" id="qbtns"></span></h2>
+    <div class="bulk" id="bulk"><span id="selcount">0 selected</span>
+      <span class="row"><a class="btn sm primary" id="b-now">Approve &amp; post now</a>
+      <a class="btn sm" id="b-later">Approve (post later)</a><a class="btn sm" id="b-rej">Reject</a></span></div>
     <div class="scroll"><table id="queue"></table></div>
-    <div class="help">Watch a clip: open its run and download the <b>clips</b> artifact. Approve: <b>Review</b> → Run workflow → paste the clip id.</div>
+    <div class="help">Tick clips → <b>Approve &amp; post now</b> opens a pre-filled GitHub form; press <b>Submit new issue</b> and they post within ~10 min.
+      Watch a clip first: <b>Watch</b> opens its run - download the <b>clips</b> artifact.</div>
+  </section>
+
+  <section>
+    <h2>Posted</h2>
+    <div class="scroll"><table id="posted"></table></div>
   </section>
 
   <section>
@@ -198,22 +215,46 @@ $('#qbtns').append(link('Review', D.links.review, 'btn sm'), link('Publish now',
 
 const tiles = [['Creators watched', D.creators.length, `${D.creators.filter(c=>c.source==='auto').length} auto-discovered`],
   ['Clips waiting', D.counts.pending, 'need your approval'], ['Approved', D.counts.approved, 'post on next publish'],
-  ['Posted (7 days)', D.counts.published_7d, 'across all platforms'],
+  ['Posted (7 days)', D.counts.published_7d, 'see Posted below'],
   ['Live now (top list)', D.board.filter(r=>r.live_now).length, 'streams being sampled']];
 for(const [t,n,s] of tiles) $('#tiles').append(el('div',{class:'tile'}, el('span',{text:t}), el('b',{text:fmt(n)}), el('span',{text:s})));
 
 // queue
+const sel = new Set();
+function bulkUrl(action){ const q = new URLSearchParams({template:'clips.yml',
+  title:`clips: ${action.split(' ')[0].toLowerCase()} ${sel.size}`, action, ids:[...sel].join('\n')});
+  return D.links.clips_form.split('?')[0] + '?' + q.toString(); }
+function refreshBulk(){ $('#selcount').textContent = sel.size + ' selected';
+  for(const [id,a] of [['#b-now','Approve and post now'],['#b-later','Approve (post at the next scheduled publish)'],['#b-rej','Reject']]){
+    const b=$(id); b.href = sel.size? bulkUrl(a) : '#'; b.target='_blank'; b.setAttribute('aria-disabled', sel.size? 'false':'true'); } }
 (function(){ const t=$('#queue');
-  if(!D.queue.length){ t.replaceWith(el('div',{class:'empty',text:'No clips yet - they appear after the next harvest.'})); return; }
-  t.append(el('tr',{}, ...['Status','Clip','Creator','Score','Chat at that moment',''].map(h=>el('th',{text:h}))));
+  if(!D.queue.length){ t.replaceWith(el('div',{class:'empty',text:'No clips waiting.'})); $('#bulk').style.display='none'; return; }
+  const all = el('input',{type:'checkbox',title:'select all pending'});
+  all.onchange = () => { document.querySelectorAll('#queue input[data-id]').forEach(cb=>{cb.checked=all.checked;
+    all.checked? sel.add(cb.dataset.id) : sel.delete(cb.dataset.id);}); refreshBulk(); };
+  t.append(el('tr',{}, el('th',{},all), ...['Status','Clip','Creator','Score','Chat at that moment',''].map(h=>el('th',{text:h}))));
   for(const q of D.queue){
-    const st = q.status==='pending'?'warn':q.status==='approved'?'acc':'ok';
-    t.append(el('tr',{}, el('td',{}, el('span',{class:'chip '+st,text:q.status})),
+    const st = q.status==='pending'?'warn':'acc';
+    const cb = el('input',{type:'checkbox','data-id':q.id});
+    cb.onchange = () => { cb.checked? sel.add(q.id) : sel.delete(q.id); refreshBulk(); };
+    t.append(el('tr',{}, el('td',{},cb), el('td',{}, el('span',{class:'chip '+st,text:q.status})),
       el('td',{}, el('div',{class:'name',text:q.title||q.hook}), el('div',{class:'small',text:q.id+(q.meta_source==='llm'?' · AI text':'')})),
       el('td',{text:q.creator}), el('td',{class:'n',text:fmt(Math.round(q.score))}),
       el('td',{}, el('div',{class:'small',text:q.chat})),
       el('td',{}, q.run_url? link('Watch', q.run_url, 'btn sm') : '')));
-  }})();
+  }
+  refreshBulk(); })();
+
+// posted
+(function(){ const t=$('#posted');
+  if(!D.posted.length){ t.replaceWith(el('div',{class:'empty',text:'Nothing posted yet.'})); return; }
+  t.append(el('tr',{}, ...['When','Clip','Creator','Links'].map(h=>el('th',{text:h}))));
+  for(const q of D.posted){
+    const links = el('span',{class:'row'}, ...(q.posts||[]).map(p => p.url? link(p.platform==='youtube'?'YouTube':p.platform==='instagram'?'Instagram':p.platform, p.url, 'btn sm') : el('span',{class:'chip',text:p.platform})));
+    t.append(el('tr',{}, el('td',{class:'small',text:ago(q.published_at)}),
+      el('td',{}, el('div',{class:'name',text:q.title||q.hook}), el('div',{class:'small',text:q.id})),
+      el('td',{text:q.creator}), el('td',{},links)));
+  } })();
 
 // leaderboard
 let filter='all';

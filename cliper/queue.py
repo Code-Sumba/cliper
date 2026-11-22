@@ -40,13 +40,16 @@ def list_items(status: str | None = None) -> list[dict]:
     return [i for i in items if status is None or i.get("status") == status]
 
 
-def set_status(item_id: str, status: str, note: str = "") -> bool:
+def set_status(item_id: str, status: str, note: str = "", **fields) -> bool:
+    """Change a clip's status. Extra fields (published_at, posts...) are saved
+    with it - setting them on a loaded copy is lost on the next _load()."""
     items = _load()
     for i in items:
         if i["id"] == item_id:
             i["status"] = status
             if note:
                 i["note"] = note
+            i.update(fields)
             _save(items)
             return True
     return False

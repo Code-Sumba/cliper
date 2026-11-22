@@ -30,6 +30,15 @@ from .storage import StorageError, get_storage
 MAX_YOUTUBE_PER_RUN = 5      # videos.insert is ~1600 of 10,000 daily quota units
 
 
+def max_posts_per_run() -> int:
+    """Clips posted per publish run. Spreads a big approved backlog over the
+    day instead of dumping it at once (bursts reach fewer people)."""
+    try:
+        return max(1, int(env("MAX_POSTS_PER_RUN", "4")))
+    except ValueError:
+        return 4
+
+
 def check_campaign(item: dict, creator) -> tuple[bool, str]:
     rules = creator.campaign or {}
     if not rules:
@@ -57,18 +66,20 @@ def platforms_for(creator) -> list[str] | None:
 
 
 def eligible(item: dict, creator) -> tuple[bool, str]:
-    if not creator.may_auto_publish:
-        return False, f"permission='{creator.permission}' - review queue only"
-
+    """approved: you looked at it - post it, whatever the permission level.
+    pending: only posted without you when AUTO_PUBLISH is on AND the creator
+    gave permission (granted / campaign), within their weekly cap."""
     status = item.get("status")
-    if status == "pending" and not auto_publish_enabled():
-        return False, "awaiting your approval (AUTO_PUBLISH is off)"
-    if status not in {"pending", "approved"}:
+    if status == "approved":
+        return check_campaign(item, creator)
+    if status != "pending":
         return False, f"status={status}"
-
+    if not creator.may_auto_publish:
+        return False, f"permission='{creator.permission}' - waiting for your approval"
+    if not auto_publish_enabled():
+        return False, "awaiting your approval (AUTO_PUBLISH is off)"
     if posted_this_week(creator.handle) >= creator.post_per_week:
         return False, f"weekly cap of {creator.post_per_week} reached"
-
     return check_campaign(item, creator)
 
 
@@ -85,8 +96,13 @@ def main() -> int:
         print(f"[publish] storage: {storage.name} not ready ({store_why}); "
               "URL-fetching platforms will be skipped")
 
-    yt_done = 0
+    # Approved first (you asked for them), oldest first within each group.
+    items.sort(key=lambda i: (i.get("status") != "approved", i.get("created_at", 0)))
+    yt_done = posted = 0
     for item in items:
+        if posted >= max_posts_per_run():
+            print(f"[publish] {max_posts_per_run()} posted this run; the rest wait for the next run")
+            break
         creator = by_handle.get(item.get("creator"))
         if not creator:
             continue
@@ -115,7 +131,7 @@ def main() -> int:
             except StorageError as exc:
                 print(f"[publish] upload failed for {item['id']}: {exc}")
 
-        results = []
+        results, posts = [], []
         for pub in publishers:
             if pub.needs_public_url and not public_url:
                 print(f"[publish]   {pub.name}: skipped, needs a public URL")
@@ -130,6 +146,7 @@ def main() -> int:
             try:
                 res = pub.publish(clip, meta, public_url)
                 results.append(str(res))
+                posts.append({"platform": res.platform, "id": res.post_id, "url": res.url})
                 if pub.name == "youtube":
                     yt_done += 1
                 print(f"[publish]   {res}")
@@ -139,8 +156,9 @@ def main() -> int:
                 print(f"[publish]   {pub.name} FAILED: {exc}")
 
         if results:
-            set_status(item["id"], "published", note="; ".join(results))
-            item["published_at"] = int(time.time())
+            set_status(item["id"], "published", note="; ".join(results),
+                       published_at=int(time.time()), posts=posts)
+            posted += 1
         else:
             print(f"[publish] {item['id']}: nothing published")
     return 0

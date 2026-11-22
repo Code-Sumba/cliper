@@ -260,10 +260,22 @@ def build_meta(
     )
 
 
+# Titles/captions that swear get age-restricted or quietly down-ranked; the
+# burned-in captions still carry the real words.
+_PROFANE = re.compile(r"\b(fuck\w*|shit\w*|bitch\w*|ass(hole)?|dick\w*|pussy|cunt|nigg\w*|fag\w*|"
+                      r"retard\w*|whore|slut|bastard|damn|motherf\w*|wtf|stfu)\b", re.I)
+
+
+def _mostly_latin(text: str) -> bool:
+    letters = [c for c in text if c.isalpha()]
+    return bool(letters) and sum(c.isascii() for c in letters) / len(letters) > 0.9
+
+
 def _best_line(transcript: str, max_len: int = 60) -> str:
     """The most quotable sentence: short, and ideally loud (! or ?)."""
     parts = [p.strip(" -\"'") for p in re.split(r"(?<=[.!?])\s+", transcript) if p.strip()]
-    parts = [p for p in parts if 3 <= len(p.split()) <= 12 and len(p) <= max_len]
+    parts = [p for p in parts if 3 <= len(p.split()) <= 12 and len(p) <= max_len
+             and not _PROFANE.search(p) and _mostly_latin(p)]
     if not parts:
         return ""
     return max(parts, key=lambda p: (p.endswith(("!", "?")), -abs(len(p.split()) - 6)))

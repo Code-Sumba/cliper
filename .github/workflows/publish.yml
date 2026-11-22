@@ -5,7 +5,11 @@ name: publish
 # permission, approval, campaign rules, weekly cap.
 on:
   schedule:
-    - cron: "23 13 * * *"      # once a day
+    # 3x a day, MAX_POSTS_PER_RUN (default 4) each: spreads a backlog out and
+    # hits India evening (13:23), US afternoon (19:23) and US evening (01:23).
+    - cron: "23 13 * * *"
+    - cron: "23 19 * * *"
+    - cron: "23 1 * * *"
   workflow_dispatch:
     inputs:
       run_id:
@@ -61,6 +65,7 @@ jobs:
       - name: Readiness check
         env:
           AUTO_PUBLISH:          ${{ vars.AUTO_PUBLISH }}
+          MAX_POSTS_PER_RUN:     ${{ vars.MAX_POSTS_PER_RUN }}
           CLIPER_PLATFORMS:      ${{ vars.CLIPER_PLATFORMS }}
           # storage
           CLIPER_STORAGE:        ${{ vars.CLIPER_STORAGE }}
@@ -95,6 +100,7 @@ jobs:
       - name: Publish approved clips
         env:
           AUTO_PUBLISH:          ${{ vars.AUTO_PUBLISH }}
+          MAX_POSTS_PER_RUN:     ${{ vars.MAX_POSTS_PER_RUN }}
           CLIPER_PLATFORMS:      ${{ vars.CLIPER_PLATFORMS }}
           # storage
           CLIPER_STORAGE:        ${{ vars.CLIPER_STORAGE }}
@@ -133,3 +139,16 @@ jobs:
           git add state/ || true
           git diff --staged --quiet || git commit -m "publish: update queue [skip ci]"
           for i in 1 2 3 4; do git pull --rebase -q && git push -q && break; echo "push retry $i"; sleep $((i*5)); done
+
+      - name: Posted links
+        if: always()
+        run: |
+          python - >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          import json, pathlib, time
+          q = json.loads(pathlib.Path("state/queue.json").read_text())
+          recent = [i for i in q if i.get("status") == "published" and time.time() - i.get("published_at", 0) < 3600]
+          print(f"### Posted this run: {len(recent)}")
+          for i in recent:
+              links = " ".join(f"[{p['platform']}]({p['url']})" for p in i.get("posts", []) if p.get("url"))
+              print(f"- {i['meta'].get('title', i['id'])} - {links}")
+          EOF

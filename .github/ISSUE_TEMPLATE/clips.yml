@@ -1,0 +1,22 @@
+name: Approve / reject clips
+description: Approve or reject several clips at once (the website fills this in for you).
+title: "clips: "
+labels: ["clips"]
+body:
+  - type: dropdown
+    id: action
+    attributes:
+      label: Action
+      options:
+        - Approve and post now
+        - Approve (post at the next scheduled publish)
+        - Reject
+    validations:
+      required: true
+  - type: textarea
+    id: ids
+    attributes:
+      label: Clip ids
+      description: One per line (or separated by spaces / commas).
+    validations:
+      required: true

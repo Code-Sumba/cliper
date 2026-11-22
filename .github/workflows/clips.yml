@@ -1,0 +1,71 @@
+name: clips
+
+# Bulk approve / reject from the website: its "Approve selected" button opens
+# the issue form in .github/ISSUE_TEMPLATE/clips.yml pre-filled with the ids.
+# Owner only - on a public repo anyone can open an issue.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write               # to start publish
+
+concurrency:
+  group: cliper-state
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: contains(github.event.issue.labels.*.name, 'clips')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Only the owner may approve clips
+        if: github.event.issue.user.login != github.repository_owner
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} \
+            -c "Only the repository owner can approve clips." --reason "not planned"
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install PyYAML requests
+
+      - name: Apply
+        id: apply
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          RESULT_FILE: ${{ runner.temp }}/result.md
+        run: python -m cliper.review from-issue
+
+      - name: Commit
+        run: |
+          git config user.name  "cliper-bot"
+          git config user.email "cliper-bot@users.noreply.github.com"
+          git add state/
+          git diff --staged --quiet || git commit -m "review: bulk from #${{ github.event.issue.number }} [skip ci]"
+          for i in 1 2 3 4; do git pull --rebase -q && git push -q && break; echo "push retry $i"; sleep $((i*5)); done
+
+      - name: Start publish
+        if: steps.apply.outputs.publish_now == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run publish.yml -R ${{ github.repository }}
+
+      - name: Reply and close
+        if: always() && github.event.issue.user.login == github.repository_owner
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MSG="$(cat '${{ runner.temp }}/result.md' 2>/dev/null || echo 'Something went wrong - see the workflow log.')"
+          gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} -c "$MSG"

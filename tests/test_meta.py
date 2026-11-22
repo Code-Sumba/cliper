@@ -63,3 +63,9 @@ def test_llm_failure_falls_back(monkeypatch):
     with mock.patch("requests.post", side_effect=OSError("down")):
         m = M.build_meta("IShowSpeed", cand(), transcript=TRANSCRIPT)
     assert m.source == "template"
+
+
+def test_titles_skip_profanity_and_non_latin():
+    assert M._best_line("Get up me bitch! Give me a W in chat.") == "Give me a W in chat."
+    assert M._best_line("Итекулок, а вот всё тут.") == ""
+    assert not M._PROFANE.search("that class, I assume")

@@ -91,9 +91,16 @@ def _creator(**kw):
     return Creator(**base)
 
 
-def test_permission_none_can_never_publish():
-    ok, why = eligible({"status": "approved", "meta": {}}, _creator(permission="none"))
+def test_permission_none_never_publishes_on_its_own(monkeypatch):
+    monkeypatch.setenv("AUTO_PUBLISH", "true")
+    ok, why = eligible({"status": "pending", "meta": {}}, _creator(permission="none"))
     assert ok is False and "permission" in why
+
+
+def test_permission_none_publishes_once_you_approve(monkeypatch):
+    monkeypatch.setenv("AUTO_PUBLISH", "false")
+    ok, _ = eligible({"status": "approved", "meta": {}}, _creator(permission="none"))
+    assert ok is True
 
 
 def test_pending_blocked_while_auto_publish_off(monkeypatch):
@@ -150,3 +157,13 @@ def test_chat_parser_survives_junk_lines():
     p = Path(tempfile.mkdtemp()) / "c.live_chat.json"
     p.write_text("not json\n\n{}\n", encoding="utf-8")
     assert parse(p) == []
+
+
+def test_set_status_persists_extra_fields(tmp_path, monkeypatch):
+    from cliper import queue
+    monkeypatch.setattr(queue, "QUEUE_FILE", tmp_path / "q.json")
+    queue.add({"id": "a", "creator": "c"})
+    queue.set_status("a", "published", published_at=123, posts=[{"platform": "youtube", "url": "u"}])
+    item = queue.list_items()[0]
+    assert item["published_at"] == 123 and item["posts"][0]["url"] == "u"
+    assert queue.posted_this_week("c", now=200) == 1
