@@ -13,7 +13,7 @@ from .audio import curve_for_stream
 from .chat import download_twitch_chat, find_candidates, load_twitchdownloader_json
 from .config import CLIPS_DIR, STATE_DIR, WORK_DIR, ensure_dirs, env, load_creators
 from .fetch import check_tools, fetch_candidates
-from .live import StreamRef, load_seen, mark_seen
+from .live import StreamRef, is_done, load_seen, mark_seen
 from .meta import build_meta
 from .queue import add as queue_add
 from .render import build_ass, render_framed, transcribe
@@ -60,7 +60,7 @@ def harvest_stream(ref: StreamRef, creator) -> int:
         print(f"[harvest] volume re-ranked the top picks: {before} -> "
               f"{[c.offset_seconds for c in cands[:3]]}")
 
-    made = 0
+    made = failed = 0
     cam_memory: dict = {}   # frame.plan reuses a stream's facecam box across clips
     for cand, raw in fetch_candidates(ref.url, cands, WORK_DIR, ref.vod_id):
         try:
@@ -98,8 +98,13 @@ def harvest_stream(ref: StreamRef, creator) -> int:
             print(f"[harvest]   clip at {cand.offset_seconds}s score={cand.score} look={look}")
         except Exception as exc:
             print(f"[harvest]   failed at {cand.offset_seconds}s: {type(exc).__name__}: {exc}")
+            failed += 1
         finally:
             raw.unlink(missing_ok=True)   # free runner disk immediately
+    if made == 0 and failed:
+        # Every clip broke: a bug or a tool problem, not a dull stream. Mark
+        # the stream failed (retried later) instead of done.
+        raise RuntimeError(f"all {failed} clips failed")
     return made
 
 
@@ -119,7 +124,7 @@ def main() -> int:
     # the same streams again (they are only marked seen when it finishes).
     # This run starts from the latest commit, so skip anything already done.
     seen = load_seen()
-    pending = [r for r in pending if r.key() not in seen]
+    pending = [r for r in pending if not is_done(seen.get(r.key()))]
     total = 0
     for ref in pending[:MAX_STREAMS_PER_RUN]:
         creator = by_handle.get(ref.creator)

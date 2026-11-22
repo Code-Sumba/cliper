@@ -1,10 +1,14 @@
 # Core pipeline
-yt-dlp>=2026.10.0
+# [default] adds yt-dlp-ejs, the solver YouTube's JS challenges now require
+yt-dlp[default]>=2026.10.0
 requests>=2.32.0
 PyYAML>=6.0.2
 
 # Captions (CPU-friendly on GitHub runners)
 faster-whisper>=1.1.0
+# PyAV 19 removed av.open(metadata_errors=...), which faster-whisper 1.2 still
+# passes - every transcription then fails. Lift once faster-whisper catches up.
+av>=11,<19
 
 # Framing engine (vendor/sc): face detection, title cards
 opencv-python-headless>=4.10.0

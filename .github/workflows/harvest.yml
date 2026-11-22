@@ -38,6 +38,14 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu-core
 
+      - name: Configure yt-dlp
+        # YouTube now serves JS challenges; yt-dlp solves them with a JS runtime
+        # (Node ships on the runner) plus yt-dlp-ejs from requirements.txt.
+        run: |
+          mkdir -p ~/.config/yt-dlp
+          echo "--js-runtimes node" > ~/.config/yt-dlp/config
+          node --version
+
       - name: Install TwitchDownloaderCLI
         run: |
           VER=$(curl -sS https://api.github.com/repos/lay295/TwitchDownloader/releases/latest | python3 -c "import sys,json;print(json.load(sys.stdin)['tag_name'])")

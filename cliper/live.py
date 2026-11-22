@@ -41,13 +41,25 @@ def load_seen() -> dict:
     return {}
 
 
+MAX_ATTEMPTS = 3
+
+
+def is_done(entry: dict | None) -> bool:
+    """Harvested, or failed too often to keep trying."""
+    if not entry:
+        return False
+    return entry.get("status") != "failed" or entry.get("attempts", 1) >= MAX_ATTEMPTS
+
+
 def mark_seen(ref: StreamRef, status: str = "harvested") -> None:
     seen = load_seen()
+    prev = seen.get(ref.key()) or {}
     seen[ref.key()] = {
         "creator": ref.creator,
         "title": ref.title,
         "status": status,
         "at": int(time.time()),
+        "attempts": prev.get("attempts", 0) + 1,
     }
     SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
     SEEN_FILE.write_text(json.dumps(seen, indent=2, sort_keys=True), encoding="utf-8")
@@ -221,7 +233,7 @@ def find_new_streams(creators: list[Creator]) -> list[StreamRef]:
                 refs += youtube_recent_uploads(c.youtube_channel_id, c.vods_per_check)
             for r in refs:
                 r.creator = c.handle
-                if r.key() not in seen:
+                if not is_done(seen.get(r.key())):
                     fresh.append(r)
         except Exception as exc:  # one bad creator must not kill the run
             print(f"[live] {c.handle}: {type(exc).__name__}: {exc}")

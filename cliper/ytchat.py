@@ -24,7 +24,10 @@ def download_chat(url: str, work_dir: Path, key: str, extra_args: list[str] | No
             check=True, capture_output=True, timeout=900,
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
-        print(f"[ytchat] replay download failed: {type(exc).__name__}")
+        err = (exc.stderr or b"")
+        err = err.decode("utf-8", "replace") if isinstance(err, bytes) else str(err)
+        tail = " | ".join(l.strip() for l in err.splitlines() if "ERROR" in l or "WARNING" in l)[-400:]
+        print(f"[ytchat] replay download failed: {type(exc).__name__}: {tail or 'no stderr'}")
         return None
     files = sorted(work_dir.glob(f"{key}*.live_chat.json*"))
     return files[0] if files else None
