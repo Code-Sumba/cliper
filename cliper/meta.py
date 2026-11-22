@@ -134,11 +134,10 @@ streamer; no slurs; English."""
 _MODEL_CACHE: dict[str, str] = {}
 
 
-def pick_model(base: str, key: str, wanted: str) -> str:
-    """When the configured model 404s (providers retire names often), ask the
-    endpoint what it serves and take the newest fast model. Cached per run."""
-    if base in _MODEL_CACHE:
-        return _MODEL_CACHE[base]
+def ranked_models(base: str, key: str, wanted: str) -> list[str]:
+    """What the endpoint serves, best first: stable fast 'flash' models, newest
+    first, then lite ones. Providers retire names (404) and overload the newest
+    one on free tiers (503), so the caller walks down this list."""
     import requests
 
     r = requests.get(f"{base}/models", headers={"Authorization": f"Bearer {key}"}, timeout=30)
@@ -149,13 +148,10 @@ def pick_model(base: str, key: str, wanted: str) -> str:
 
     def rank(i: str):
         nums = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", i)[:1]] or [0.0]
-        return ("flash" in i and "lite" not in i, family and i.startswith(family),
+        return ("flash" in i, "lite" not in i, family and i.startswith(family),
                 "preview" not in i and "exp" not in i, nums[0], -len(i))
 
-    best = max(ids, key=rank) if ids else wanted
-    print(f"[meta] model '{wanted}' unavailable - using '{best}' (set LLM_MODEL to pin one)")
-    _MODEL_CACHE[base] = best
-    return best
+    return sorted(ids, key=rank, reverse=True)
 
 
 def _llm_config() -> tuple[str, str, str] | None:
@@ -203,9 +199,16 @@ def llm_fields(creator: str, stream_title: str, transcript: str, chat: str,
             if resp.status_code == 400 and low_effort:      # endpoint without that knob
                 return ask(m, low_effort=False)
             return resp
-        r = ask(_MODEL_CACHE.get(base, model))
-        if r.status_code == 404:                  # retired model name
-            r = ask(pick_model(base, key, model))
+        first = _MODEL_CACHE.get(base, model)
+        r = ask(first)
+        if r.status_code in {404, 429, 503}:      # retired / rate-limited / overloaded
+            for m in [m for m in ranked_models(base, key, model) if m != first][:4]:
+                print(f"[meta] model '{first}' answered {r.status_code} - trying '{m}'")
+                r = ask(m)
+                if r.ok:
+                    _MODEL_CACHE[base] = m        # stick with what works this run
+                    break
+                first = m
         r.raise_for_status()
         data = _parse_json(r.json()["choices"][0]["message"]["content"])
     except Exception as exc:  # network, quota, bad JSON: fall back, never fail the clip
