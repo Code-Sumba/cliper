@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  actions: write               # to start the next watch (GitHub's cron is unreliable)
 
 concurrency:
   group: cliper-harvest
@@ -128,3 +129,24 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           python -m cliper.review list pending >> $GITHUB_STEP_SUMMARY || true
           echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # GitHub's schedule is best effort: "every 2 hours" ran ~5 times a day,
+      # hours late. While streams are still waiting, chain straight into the
+      # next watch instead of waiting for the timer. When nothing is left the
+      # chain stops and the cron takes over again.
+      - name: Keep going if streams are waiting
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LEFT=$(python - <<'PY'
+          import json, pathlib
+          from cliper.live import is_done, load_seen
+          p = pathlib.Path("state/pending_streams.json")
+          pending = json.loads(p.read_text()) if p.exists() else []
+          seen = load_seen()
+          print(sum(1 for r in pending if not is_done(seen.get(f"{r['platform']}:{r['vod_id']}"))))
+          PY
+          )
+          echo "streams still waiting: $LEFT"
+          if [ "${LEFT:-0}" -gt 0 ]; then gh workflow run watch.yml; fi
