@@ -71,3 +71,35 @@ creators:
 # `kick` is registered but reports itself unconfigured - Kick has no
 # documented posting API. Adding a new one is a single file in
 # cliper/platforms/; nothing else changes.
+
+  - handle: mythpat
+    display_name: "Mythpat"
+    twitch: null
+    youtube_channel_id: UCx6F-rETGiz7xf_vkMmX2yQ
+    kick: null
+    permission: none
+    permission_note: "Added from the website. No permission recorded."
+
+  - handle: techno_gamerz
+    display_name: "Techno Gamerz"
+    twitch: null
+    youtube_channel_id: UCX8pnu3DYUnx8qy8V_c6oHg
+    kick: null
+    permission: none
+    permission_note: "Added from the website. No permission recorded."
+
+  - handle: shreeman_legend_live
+    display_name: "shreeman legend live"
+    twitch: null
+    youtube_channel_id: UCKVei70N69V3V5wBQixHZbg
+    kick: null
+    permission: none
+    permission_note: "Added from the website. No permission recorded."
+
+  - handle: ujjwal
+    display_name: "Ujjwal"
+    twitch: null
+    youtube_channel_id: UCl_vAxZpvbO-PFXdDu7EdHw
+    kick: null
+    permission: none
+    permission_note: "Added from the website. No permission recorded."
