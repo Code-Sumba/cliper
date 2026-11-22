@@ -188,18 +188,21 @@ def llm_fields(creator: str, stream_title: str, transcript: str, chat: str,
         game=game or "(unknown)", keywords=", ".join(keywords or []) or "(none)",
     )
     try:
-        def ask(m: str):
-            return requests.post(
-                f"{base}/chat/completions",
-                headers={"Authorization": f"Bearer {key}"},
-                json={
-                    "model": m,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.8,
-                    "response_format": {"type": "json_object"},
-                },
-                timeout=60,
-            )
+        def ask(m: str, low_effort: bool = True):
+            body = {
+                "model": m,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.8,
+                "response_format": {"type": "json_object"},
+            }
+            if low_effort:
+                # Thinking models spend a minute reasoning about a 6-word hook.
+                body["reasoning_effort"] = "low"
+            resp = requests.post(f"{base}/chat/completions", json=body, timeout=150,
+                                 headers={"Authorization": f"Bearer {key}"})
+            if resp.status_code == 400 and low_effort:      # endpoint without that knob
+                return ask(m, low_effort=False)
+            return resp
         r = ask(_MODEL_CACHE.get(base, model))
         if r.status_code == 404:                  # retired model name
             r = ask(pick_model(base, key, model))

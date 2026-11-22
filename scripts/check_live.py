@@ -40,8 +40,8 @@ def _llm():
                           "Bro he just stole the police car and drove it straight into the ocean. No way!",
                           "LMAO OMEGALUL KEKW", game="GTA 6", keywords=["kai cenat gta 6", "gta 6 funny moments"])
     if not out:
-        return False, f"no usable answer from {model} at {base.split('/')[2]} (see log above)"
-    return True, f"{model}: hook='{out['hook']}' | title='{out['title']}'"
+        return False, f"no usable answer from {meta._MODEL_CACHE.get(base, model)} at {base.split('/')[2]} (see log above)"
+    return True, f"{meta._MODEL_CACHE.get(base, model)}: hook='{out['hook']}' | title='{out['title']}'"
 
 
 @check("YouTube autocomplete (SEO)")
