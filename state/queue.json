@@ -38,9 +38,18 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795334700,
-    "id": "zackrawrr-2936386266-000"
+    "id": "zackrawrr-2936386266-000",
+    "published_at": 1795356480,
+    "posts": [
+      {
+        "platform": "youtube",
+        "id": "WuxLoKDmLqo",
+        "url": "https://youtube.com/shorts/WuxLoKDmLqo"
+      }
+    ],
+    "note": "youtube:WuxLoKDmLqo (instagram token expired)"
   },
   {
     "creator": "zackrawrr",
@@ -77,9 +86,18 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795334729,
-    "id": "zackrawrr-2936386266-001"
+    "id": "zackrawrr-2936386266-001",
+    "published_at": 1795356480,
+    "posts": [
+      {
+        "platform": "youtube",
+        "id": "nk8jJLHoSXI",
+        "url": "https://youtube.com/shorts/nk8jJLHoSXI"
+      }
+    ],
+    "note": "youtube:nk8jJLHoSXI (instagram token expired)"
   },
   {
     "creator": "zackrawrr",
@@ -118,9 +136,18 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795334754,
-    "id": "zackrawrr-2936386266-002"
+    "id": "zackrawrr-2936386266-002",
+    "published_at": 1795356480,
+    "posts": [
+      {
+        "platform": "youtube",
+        "id": "Ys7A394gJTw",
+        "url": "https://youtube.com/shorts/Ys7A394gJTw"
+      }
+    ],
+    "note": "youtube:Ys7A394gJTw (instagram token expired)"
   },
   {
     "creator": "zackrawrr",
