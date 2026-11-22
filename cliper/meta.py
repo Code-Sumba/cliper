@@ -131,6 +131,33 @@ Rules: never invent events not supported by the transcript or chat; never claim 
 streamer; no slurs; English."""
 
 
+_MODEL_CACHE: dict[str, str] = {}
+
+
+def pick_model(base: str, key: str, wanted: str) -> str:
+    """When the configured model 404s (providers retire names often), ask the
+    endpoint what it serves and take the newest fast model. Cached per run."""
+    if base in _MODEL_CACHE:
+        return _MODEL_CACHE[base]
+    import requests
+
+    r = requests.get(f"{base}/models", headers={"Authorization": f"Bearer {key}"}, timeout=30)
+    r.raise_for_status()
+    ids = [m.get("id", "").split("/")[-1] for m in r.json().get("data", [])]
+    ids = [i for i in ids if i and not re.search(r"embed|tts|image|audio|vision|live|aqa|learnlm|gemma", i)]
+    family = wanted.split("-")[0] if "-" in wanted else ""
+
+    def rank(i: str):
+        nums = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", i)[:1]] or [0.0]
+        return ("flash" in i and "lite" not in i, family and i.startswith(family),
+                "preview" not in i and "exp" not in i, nums[0], -len(i))
+
+    best = max(ids, key=rank) if ids else wanted
+    print(f"[meta] model '{wanted}' unavailable - using '{best}' (set LLM_MODEL to pin one)")
+    _MODEL_CACHE[base] = best
+    return best
+
+
 def _llm_config() -> tuple[str, str, str] | None:
     key = env("LLM_API_KEY") or env("GEMINI_API_KEY")
     if not key:
@@ -161,17 +188,21 @@ def llm_fields(creator: str, stream_title: str, transcript: str, chat: str,
         game=game or "(unknown)", keywords=", ".join(keywords or []) or "(none)",
     )
     try:
-        r = requests.post(
-            f"{base}/chat/completions",
-            headers={"Authorization": f"Bearer {key}"},
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.8,
-                "response_format": {"type": "json_object"},
-            },
-            timeout=60,
-        )
+        def ask(m: str):
+            return requests.post(
+                f"{base}/chat/completions",
+                headers={"Authorization": f"Bearer {key}"},
+                json={
+                    "model": m,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.8,
+                    "response_format": {"type": "json_object"},
+                },
+                timeout=60,
+            )
+        r = ask(_MODEL_CACHE.get(base, model))
+        if r.status_code == 404:                  # retired model name
+            r = ask(pick_model(base, key, model))
         r.raise_for_status()
         data = _parse_json(r.json()["choices"][0]["message"]["content"])
     except Exception as exc:  # network, quota, bad JSON: fall back, never fail the clip

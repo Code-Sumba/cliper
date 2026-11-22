@@ -69,3 +69,22 @@ def test_titles_skip_profanity_and_non_latin():
     assert M._best_line("Get up me bitch! Give me a W in chat.") == "Give me a W in chat."
     assert M._best_line("Итекулок, а вот всё тут.") == ""
     assert not M._PROFANE.search("that class, I assume")
+
+
+def test_retired_model_falls_back_to_newest_flash(monkeypatch):
+    monkeypatch.setenv("LLM_API_KEY", "k")
+    M._MODEL_CACHE.clear()
+    gone = mock.Mock(status_code=404)
+    ok = mock.Mock(status_code=200, raise_for_status=lambda: None,
+                   json=lambda: {"choices": [{"message": {"content":
+                       '{"hook":"no way","title":"Kai Cenat drives into the ocean","caption":"why?"}'}}]})
+    models = mock.Mock(raise_for_status=lambda: None, json=lambda: {"data": [
+        {"id": "models/gemini-2.0-flash"}, {"id": "models/gemini-3.1-flash"},
+        {"id": "models/gemini-3.1-flash-lite"}, {"id": "models/text-embedding-004"},
+        {"id": "models/gemini-3.1-pro"}]})
+    posts = iter([gone, ok])
+    with mock.patch("requests.post", side_effect=lambda *a, **k: next(posts)) as post, \
+         mock.patch("requests.get", return_value=models):
+        out = M.llm_fields("Kai Cenat", "", "he drove into the ocean", "LMAO")
+    assert out["hook"] == "no way"
+    assert post.call_args.kwargs["json"]["model"] == "gemini-3.1-flash"
