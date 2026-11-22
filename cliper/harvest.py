@@ -98,6 +98,7 @@ def harvest_stream(ref: StreamRef, creator) -> int:
                 transcript=" ".join(w["text"] for w in words),
                 source_platform=ref.platform,
                 pre_roll=creator.pre_roll,
+                game=ref.game,
             )
             final = CLIPS_DIR / f"{ref.vod_id}_{cand.offset_seconds}.mp4"
             _, look = render_framed(
@@ -117,6 +118,9 @@ def harvest_stream(ref: StreamRef, creator) -> int:
                 # Lets the website link straight to the run holding the video.
                 "run_id": env("GITHUB_RUN_ID"),
                 "meta": meta.as_dict(),
+                "transcript": " ".join(w["text"] for w in words)[:2000],
+                "stream_title": ref.title,
+                "game": ref.game,
             })
             made += 1
             print(f"[harvest]   clip at {cand.offset_seconds}s score={cand.score} look={look}")
@@ -143,7 +147,9 @@ def main() -> int:
         return 0
 
     by_handle = {c.handle: c for c in load_creators()}
-    pending = [StreamRef(**d) for d in json.loads(PENDING_FILE.read_text(encoding="utf-8"))]
+    fields = StreamRef.__dataclass_fields__
+    pending = [StreamRef(**{k: v for k, v in d.items() if k in fields})
+               for d in json.loads(PENDING_FILE.read_text(encoding="utf-8"))]
     # A watch run that fires while an earlier harvest is still working lists
     # the same streams again (they are only marked seen when it finishes).
     # This run starts from the latest commit, so skip anything already done.

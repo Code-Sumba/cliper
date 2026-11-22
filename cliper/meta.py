@@ -107,7 +107,9 @@ PROMPT = """You write metadata for a short vertical clip (YouTube Shorts, Instag
 cut from a livestream. Goal: maximum retention and click-through WITHOUT lying.
 
 Streamer: {creator}
+Game: {game}
 Stream title: {stream_title}
+Phrases people actually search on YouTube right now (from autocomplete): {keywords}
 What the streamer says in the clip (auto transcript, may have errors):
 \"\"\"{transcript}\"\"\"
 What chat spammed at that moment: {chat}
@@ -115,13 +117,15 @@ What chat spammed at that moment: {chat}
 Return ONLY a JSON object with these keys:
 - "hook": 2-6 words, shown as a text bar on the video for the first seconds. Creates curiosity
   about what happens, e.g. "he did NOT see that coming". No hashtags, no emojis, no names.
-- "title": YouTube Shorts title, max 60 characters. Lead with the most surprising concrete detail
-  from the transcript. Include the streamer's name only if it fits naturally. No hashtags.
+- "title": YouTube Shorts title, 35-60 characters. Put the streamer's name or one searched phrase
+  in the first few words, then the most surprising concrete detail from the transcript.
+  Curiosity over summary; never reveal the punchline. No hashtags, no ALL CAPS, no swearing.
 - "caption": 1-2 short lines for Instagram/TikTok. First line is a hook or question that makes
   people comment. Max 150 characters. No hashtags.
 - "hashtags": 3 lowercase topic hashtags without '#' specific to THIS moment or game
   (not generic words like viral, fyp, shorts).
-- "keywords": 8 search phrases people would type to find this moment.
+- "keywords": 8 search phrases people would type to find this moment; prefer the searched
+  phrases above when they fit.
 
 Rules: never invent events not supported by the transcript or chat; never claim to be the
 streamer; no slurs; English."""
@@ -143,7 +147,8 @@ def _parse_json(text: str) -> dict:
     return json.loads(text[start:end + 1])
 
 
-def llm_fields(creator: str, stream_title: str, transcript: str, chat: str) -> dict | None:
+def llm_fields(creator: str, stream_title: str, transcript: str, chat: str,
+               game: str = "", keywords: list[str] | None = None) -> dict | None:
     cfg = _llm_config()
     if not cfg or not transcript.strip():
         return None
@@ -153,6 +158,7 @@ def llm_fields(creator: str, stream_title: str, transcript: str, chat: str) -> d
     prompt = PROMPT.format(
         creator=creator, stream_title=stream_title or "(unknown)",
         transcript=transcript.strip()[:1800], chat=chat.strip()[:300] or "(none)",
+        game=game or "(unknown)", keywords=", ".join(keywords or []) or "(none)",
     )
     try:
         r = requests.post(
@@ -196,28 +202,51 @@ def build_meta(
     source_platform: str = "",
     pre_roll: int = 10,
     use_llm: bool = True,
+    game: str = "",
+    use_seo: bool = True,
 ) -> ClipMeta:
-    creator_tag = _tag(creator_display)
     topics = _topic_words(transcript)
 
-    gen = llm_fields(creator_display, stream_title, transcript, cand.sample) if use_llm else None
+    # Search demand (YouTube autocomplete): the name people search, the game,
+    # and real phrases. Empty on network failure - the rest still works.
+    from . import seo
+    game = seo.effective_game(game, stream_title)
+    res = seo.research(creator_display, game=game, topics=topics) if use_seo else seo.Research()
+    name = res.alias.title() if res.alias else creator_display.strip("_")   # zackrawrr -> Asmongold
+    game_phrase = res.game_phrase.upper() if res.game_phrase in {"gta 6", "gta 5", "cs2", "wow"} \
+        else res.game_phrase.title()
+    focus = [k for k in (res.alias or creator_display.lower(), res.game_phrase) if k]
+
+    gen = llm_fields(name, stream_title, transcript, cand.sample,
+                     game=game_phrase, keywords=res.tags(8)) if use_llm else None
     if gen:
-        hook, yt_title, line = gen["hook"], gen["title"], gen["caption"]
+        hook, line = gen["hook"], gen["caption"]
+        options = [gen["title"], f"{name}: {gen['title']}" if name.lower() not in gen["title"].lower() else ""]
         topic_tags, keywords, source = gen["hashtags"], gen["keywords"], "llm"
     else:
         hook = pick_hook(cand)
         quote = _best_line(transcript)
-        yt_title = f"{creator_display}: {quote}" if quote else f"{creator_display} - {hook}"
+        options = [
+            f"{name}: {quote}" if quote else "",
+            f"{quote} ({name} {game_phrase})" if quote and game_phrase else "",
+            f"{name} {game_phrase}: {quote}" if quote and game_phrase else "",
+            # A stock hook only when there is no real line to quote: a quote
+            # from the moment out-clicks "nobody expected this" every time.
+            "" if quote else (f"{name} {game_phrase} - {hook}" if game_phrase else f"{name} - {hook}"),
+        ]
         line = (f"\"{quote}\" 💀" if quote else hook.capitalize()) + "\nWould you have reacted the same?"
-        topic_tags = [_tag(t) for t in (extra_tags or []) + topics][:3]
-        keywords = [creator_display, f"{creator_display} clips", f"{creator_display} live",
-                    f"{creator_display} funny moments", *topics]
+        topic_tags = [_tag(t) for t in (extra_tags or []) + topics][:2]
+        keywords = [name, f"{name} clips", f"{name} funny moments", *topics]
         source = "template"
+    # Pick the option that scores best on the checks that move Shorts CTR.
+    yt_title = seo.best_title([o for o in options if o and len(o) <= 70] or options, focus)
 
-    # Hashtags: campaign-required first (never dropped), then the creator, then
-    # topic tags. Instagram caps posts at 5 hashtags; YouTube shows the first 3.
+    # Hashtags: campaign-required first (never dropped), then the name people
+    # search, the game, a searched phrase, then topics. Instagram allows 5.
     camp = [h if h.startswith("#") else f"#{h}" for h in (campaign_hashtags or [])]
-    hashtags = _uniq(camp + [f"#{creator_tag}"] + [f"#{t}" for t in topic_tags if t])
+    phrase_tags = [_tag(p) for p in res.phrases if res.game_phrase and res.game_phrase in p][:1]
+    hashtags = _uniq(camp + [f"#{_tag(name)}"] + ([f"#{res.game_tag}"] if res.game_tag else [])
+                     + [f"#{t}" for t in phrase_tags + topic_tags if t])
     hashtags = hashtags[:max(5, len(camp))]
 
     credit = f"🎥 {creator_display}" + (f" on {source_platform.capitalize()}" if source_platform else "")
@@ -228,16 +257,20 @@ def build_meta(
         title = title[:87].rstrip() + "..."
     title = f"{title} #shorts"
 
+    # The description is indexed: one plain sentence carrying the top searched
+    # phrases reads naturally and ranks better than a wall of tags.
+    searchable = ", ".join(res.tags(3))
     description = "\n".join([
         line,
         "",
         credit + (f" - from the stream \"{stream_title}\"" if stream_title else ""),
-        "Follow for more clips every day.",
+        (f"More {searchable} clips every day - follow so you don't miss the next one."
+         if searchable else "Follow for more clips every day."),
         "",
         " ".join(["#shorts"] + hashtags[:4]),
     ])
 
-    tags = _uniq([*keywords, creator_display, *GENERIC_TAGS])
+    tags = _uniq([*res.tags(10), *keywords, name, creator_display, *GENERIC_TAGS])
     # YouTube: total tag text must stay under 500 chars.
     kept, total = [], 0
     for t in tags:

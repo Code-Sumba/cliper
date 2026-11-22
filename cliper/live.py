@@ -28,6 +28,7 @@ class StreamRef:
     title: str
     url: str
     duration_seconds: int = 0
+    game: str = ""         # Twitch category, for titles / tags ("Grand Theft Auto VI")
 
     def key(self) -> str:
         return f"{self.platform}:{self.vod_id}"
@@ -114,6 +115,14 @@ def twitch_latest_vods(login: str, limit: int = 3) -> list[StreamRef]:
     if not users:
         return []
     uid = users[0]["id"]
+    # The channel's category: Twitch VODs don't carry one, and a streamer's
+    # latest VODs are almost always the game they are on now.
+    game = ""
+    try:
+        c = requests.get(f"{TWITCH_API}/channels", params={"broadcaster_id": uid}, headers=h, timeout=20)
+        game = ((c.json().get("data") or [{}])[0]).get("game_name", "") if c.ok else ""
+    except requests.RequestException:
+        pass
     v = requests.get(
         f"{TWITCH_API}/videos",
         params={"user_id": uid, "type": "archive", "first": limit},
@@ -125,6 +134,7 @@ def twitch_latest_vods(login: str, limit: int = 3) -> list[StreamRef]:
             creator=login, platform="twitch", vod_id=item["id"],
             title=item.get("title", ""), url=item.get("url", ""),
             duration_seconds=_parse_twitch_duration(item.get("duration", "")),
+            game=game,
         )
         for item in v.json().get("data", [])
     ]
