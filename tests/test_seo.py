@@ -45,3 +45,12 @@ def test_game_falls_back_to_stream_title():
     assert seo.effective_game("Just Chatting", "EXPLORING GTA 6") == "Grand Theft Auto VI"
     assert seo.effective_game("Grand Theft Auto VI", "anything") == "Grand Theft Auto VI"
     assert seo.game_terms(seo.effective_game("Just Chatting", "VANITY FAIR"))[0] == ""
+
+
+def test_misleading_drama_phrases_never_become_tags(monkeypatch):
+    monkeypatch.setattr(seo, "suggest", lambda q: ("mythpat gta 6", "mythpat gta 6 controversy",
+                                                   "mythpat diss", "mythpat gta 6 gameplay"))
+    r = seo.research("Mythpat", game="Grand Theft Auto VI")
+    assert "mythpat gta 6 controversy" not in r.phrases and "mythpat diss" not in r.phrases
+    assert "mythpat gta 6 gameplay" in r.phrases
+    assert "gta 6 moments" in r.phrases            # vidIQ-proven phrase added

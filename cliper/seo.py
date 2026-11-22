@@ -36,6 +36,25 @@ GAME_ALIASES = {
 }
 
 
+# Evergreen, high-demand / lower-competition phrases per game, checked with
+# vidIQ keyword research (2026-11-22). Added as tags next to the live
+# autocomplete phrases. Refresh occasionally - demand shifts.
+GAME_KEYWORDS = {
+    "gta 6": ["gta 6 funny moments",     # ~945k/mo, competition 58
+              "gta 6 moments",           # ~359k/mo, competition 45
+              "gta 6 best moments",      # ~228k/mo, competition 52
+              "gta 6 funny",             # ~235k/mo
+              "gta 6 funny clips"],      # ~56k/mo, IN/US
+}
+
+
+# Drama / news phrases autocomplete loves, but a clip is not about them -
+# YouTube's spam policy counts unrelated tags as misleading metadata.
+_MISLEADING = re.compile(r"\b(controvers\w*|diss|drama|beef|ban(ned)?|arrest\w*|died|death|dead|"
+                         r"leak(ed)?|exposed|scandal|lawsuit|girlfriend|wife|net worth|salary|house|"
+                         r"responds?|reply|apology|caught|real face|age)\b")
+
+
 @dataclass
 class Research:
     alias: str = ""                       # the name people search, if different
@@ -98,14 +117,19 @@ def research(creator: str, game: str = "", topics: list[str] | None = None) -> R
     for qi, q in enumerate(q for q in queries if q):
         for rank, phrase in enumerate(suggest(q)):
             p = _norm(phrase)
-            if not p or len(p) > 40:
+            if not p or len(p) > 40 or _MISLEADING.search(p):
                 continue
             # Earlier queries are about this clip; earlier ranks are more searched.
             relevant = who.split()[0] in p or (game_phrase and game_phrase in p)
             if not relevant:
                 continue
             scores[p] = scores.get(p, 0) + (10 - rank) * (1.0 if qi < 3 else 0.6)
-    res.phrases = [p for p, _ in sorted(scores.items(), key=lambda kv: -kv[1])]
+    ranked = [p for p, _ in sorted(scores.items(), key=lambda kv: -kv[1])]
+    # Creator-specific phrases first (they win search for this exact clip),
+    # then the proven game phrases, then everything else autocomplete gave.
+    mine = [p for p in ranked if who.split()[0] in p]
+    proven = GAME_KEYWORDS.get(game_phrase, [])
+    res.phrases = list(dict.fromkeys(mine[:4] + proven + ranked))
     return res
 
 
