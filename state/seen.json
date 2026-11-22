@@ -7,12 +7,18 @@
     "status": "failed",
     "title": "[DROPS ON] UNBANNED GTA 6 RELEASE STREAM FOREVER WOW  BIG DAY HUGE DRAMA NEW GAMES BIG NEWS  REACTS !restedXP #WWMPartner | @asmongold247"
   },
-  "twitch:2936064102": {
-    "at": 1795318077,
+  "twitch:2935283335": {
+    "at": 1795343973,
     "attempts": 1,
+    "creator": "caseoh_",
+    "status": "harvested",
+    "title": "\ud83d\udfe8LOSING MY MIND\ud83d\udfe8"
+  },
+  "twitch:2936064102": {
+    "at": 1795342051,
+    "attempts": 2,
     "creator": "ohnepixel",
-    "note": "0 clips: PyAV/yt-dlp bugs, fixed - retry",
-    "status": "failed",
+    "status": "harvested",
     "title": "\ud83d\udd34[DROPS] GTA 6 FULL PLAYTHROUGH !\ud83d\udd34"
   },
   "twitch:2936386266": {
@@ -21,6 +27,13 @@
     "creator": "zackrawrr",
     "status": "harvested",
     "title": "[DROPS ON] UNBANNED GTA 6 RELEASE STREAM FOREVER WOW  BIG DAY HUGE DRAMA NEW GAMES BIG NEWS  REACTS !restedXP #WWMPartner | @asmongold247"
+  },
+  "twitch:2936706130": {
+    "at": 1795352165,
+    "attempts": 1,
+    "creator": "theburntpeanut",
+    "status": "harvested",
+    "title": "[DROPS] GTA 6 | DAY 4 | BIGFOOT, ALIENS & BUGATTIS | WE RIDE FOR RANDY | #BUNGULATE"
   },
   "youtube:OIeLbmyraRQ": {
     "at": 1795333922,
