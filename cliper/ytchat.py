@@ -13,6 +13,11 @@ import subprocess
 from pathlib import Path
 
 
+class Blocked(RuntimeError):
+    """YouTube refused this machine ("confirm you're not a bot"). Not the
+    video's fault: retry later, or give yt-dlp cookies (YTDLP_COOKIES)."""
+
+
 def download_chat(url: str, work_dir: Path, key: str, extra_args: list[str] | None = None) -> Path | None:
     """Fetch the live-chat replay. Returns None when the video has none."""
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -28,6 +33,8 @@ def download_chat(url: str, work_dir: Path, key: str, extra_args: list[str] | No
         err = err.decode("utf-8", "replace") if isinstance(err, bytes) else str(err)
         tail = " | ".join(l.strip() for l in err.splitlines() if "ERROR" in l or "WARNING" in l)[-400:]
         print(f"[ytchat] replay download failed: {type(exc).__name__}: {tail or 'no stderr'}")
+        if "not a bot" in err or "Sign in to confirm" in err or "HTTP Error 429" in err:
+            raise Blocked("YouTube bot check - needs cookies (YTDLP_COOKIES) on this runner") from exc
         return None
     files = sorted(work_dir.glob(f"{key}*.live_chat.json*"))
     return files[0] if files else None

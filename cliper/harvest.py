@@ -21,7 +21,7 @@ from .render import build_ass, render_framed, transcribe
 from .score import blend
 
 PENDING_FILE = STATE_DIR / "pending_streams.json"
-MAX_STREAMS_PER_RUN = 2       # keep inside the runner's 6-hour job limit
+MAX_STREAMS_PER_RUN = 6       # the time budget below is the real limit
 USE_VOLUME = env("CLIPER_VOLUME", "true").lower() in {"1", "true", "yes"}
 
 # GitHub kills the job at 330 min (timeout-minutes). Leave room to upload the
@@ -149,6 +149,9 @@ def main() -> int:
     # This run starts from the latest commit, so skip anything already done.
     seen = load_seen()
     pending = [r for r in pending if not is_done(seen.get(r.key()))]
+    # Twitch first: its chat comes from the API and never hits YouTube's bot
+    # check, so a blocked YouTube stream cannot eat the run.
+    pending.sort(key=lambda r: r.platform != "twitch")
     total = 0
     for ref in pending[:MAX_STREAMS_PER_RUN]:
         if time.time() - START > NO_NEW_STREAM_AFTER:

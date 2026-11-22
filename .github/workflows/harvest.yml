@@ -45,6 +45,18 @@ jobs:
           mkdir -p ~/.config/yt-dlp
           echo "--js-runtimes node" > ~/.config/yt-dlp/config
           node --version
+          # YouTube blocks datacenter IPs ("confirm you're not a bot") unless
+          # signed in. Optional: a cookies.txt from a THROWAWAY Google account.
+          if [ -n "$YTDLP_COOKIES" ]; then
+            echo "$YTDLP_COOKIES" > ~/.config/yt-dlp/cookies.txt
+            chmod 600 ~/.config/yt-dlp/cookies.txt
+            echo "--cookies $HOME/.config/yt-dlp/cookies.txt" >> ~/.config/yt-dlp/config
+            echo "YouTube cookies: set"
+          else
+            echo "YouTube cookies: not set (YouTube streams may hit the bot check)"
+          fi
+        env:
+          YTDLP_COOKIES: ${{ secrets.YTDLP_COOKIES }}
 
       - name: Install TwitchDownloaderCLI
         run: |
