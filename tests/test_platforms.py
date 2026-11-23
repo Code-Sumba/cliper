@@ -17,7 +17,7 @@ from cliper.ytchat import parse
 
 def test_every_platform_registered():
     names = set(all_publishers())
-    assert {"youtube", "instagram", "tiktok", "kick", "webhook"} <= names
+    assert {"youtube", "instagram", "facebook", "tiktok", "kick", "webhook"} <= names
 
 
 def test_publishers_implement_the_interface():
@@ -30,7 +30,8 @@ def test_publishers_implement_the_interface():
 
 
 def test_nothing_enabled_without_credentials(monkeypatch):
-    for var in ("YOUTUBE_REFRESH_TOKEN", "IG_USER_ID", "TIKTOK_ACCESS_TOKEN", "WEBHOOK_URL"):
+    for var in ("YOUTUBE_REFRESH_TOKEN", "IG_USER_ID", "TIKTOK_ACCESS_TOKEN", "WEBHOOK_URL",
+                "FB_PAGE_ID", "FB_PAGE_TOKEN", "IG_ACCESS_TOKEN"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.delenv("CLIPER_PLATFORMS", raising=False)
     assert enabled_publishers() == []
@@ -184,3 +185,13 @@ def test_storage_errors_are_wrapped(tmp_path, monkeypatch):
     monkeypatch.setattr(st, "_client", lambda: client)
     with pytest.raises(storage.StorageError):
         st.upload(f)
+
+
+def test_facebook_reuses_the_instagram_page_token(monkeypatch):
+    from cliper.platforms.facebook import Facebook
+    monkeypatch.delenv("FB_PAGE_TOKEN", raising=False)
+    monkeypatch.setenv("FB_PAGE_ID", "123")
+    monkeypatch.setenv("IG_ACCESS_TOKEN", "page-token")
+    assert Facebook().configured() == (True, "")
+    monkeypatch.delenv("FB_PAGE_ID")
+    assert Facebook().configured()[0] is False

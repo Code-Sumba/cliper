@@ -78,6 +78,19 @@ def _ig():
     return True, f"@{a.get('username')}, {a.get('media_count')} posts, token {exp}"
 
 
+@check("Facebook Reels")
+def _fb():
+    from cliper.platforms.facebook import Facebook, _token
+    ok, why = Facebook().configured()
+    if not ok:
+        return False, why
+    g = "https://graph.facebook.com/v21.0"
+    pg = requests.get(f"{g}/{env('FB_PAGE_ID')}", params={"fields": "name", "access_token": _token()}, timeout=20).json()
+    if "error" in pg:
+        return False, pg["error"].get("message", "")[:150]
+    return True, f"page '{pg.get('name')}' reachable"
+
+
 @check("Storage (Supabase)")
 def _storage():
     from cliper.storage import get_storage

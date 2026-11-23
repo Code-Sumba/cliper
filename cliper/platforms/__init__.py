@@ -25,7 +25,7 @@ def register(cls: type[Publisher]) -> type[Publisher]:
 
 
 # Import for side effects: each module registers itself.
-from . import instagram, kick, tiktok, webhook, youtube  # noqa: E402,F401
+from . import facebook, instagram, kick, tiktok, webhook, youtube  # noqa: E402,F401
 
 
 def all_publishers() -> dict[str, Publisher]:
