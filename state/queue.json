@@ -1127,9 +1127,23 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795343811,
-    "id": "caseoh_-2935283335-019"
+    "id": "caseoh_-2935283335-019",
+    "note": "instagram:17883850311630265 (https://www.instagram.com/reel/DgFCRXZGS3M/); youtube:8MM3IQitzrQ (https://youtube.com/shorts/8MM3IQitzrQ)",
+    "published_at": 1795425360,
+    "posts": [
+      {
+        "platform": "instagram",
+        "id": "17883850311630265",
+        "url": "https://www.instagram.com/reel/DgFCRXZGS3M/"
+      },
+      {
+        "platform": "youtube",
+        "id": "8MM3IQitzrQ",
+        "url": "https://youtube.com/shorts/8MM3IQitzrQ"
+      }
+    ]
   },
   {
     "creator": "caseoh_",
@@ -1172,9 +1186,23 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795343847,
-    "id": "caseoh_-2935283335-020"
+    "id": "caseoh_-2935283335-020",
+    "note": "instagram:18080973854741294 (https://www.instagram.com/reel/DgFCYTQjVqi/); youtube:mwrCetHEi54 (https://youtube.com/shorts/mwrCetHEi54)",
+    "published_at": 1795425439,
+    "posts": [
+      {
+        "platform": "instagram",
+        "id": "18080973854741294",
+        "url": "https://www.instagram.com/reel/DgFCYTQjVqi/"
+      },
+      {
+        "platform": "youtube",
+        "id": "mwrCetHEi54",
+        "url": "https://youtube.com/shorts/mwrCetHEi54"
+      }
+    ]
   },
   {
     "creator": "caseoh_",
@@ -1217,9 +1245,23 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795343883,
-    "id": "caseoh_-2935283335-021"
+    "id": "caseoh_-2935283335-021",
+    "note": "instagram:18105360089166812 (https://www.instagram.com/reel/DgFChCSjUDN/); youtube:zeZF3DeF45w (https://youtube.com/shorts/zeZF3DeF45w)",
+    "published_at": 1795425489,
+    "posts": [
+      {
+        "platform": "instagram",
+        "id": "18105360089166812",
+        "url": "https://www.instagram.com/reel/DgFChCSjUDN/"
+      },
+      {
+        "platform": "youtube",
+        "id": "zeZF3DeF45w",
+        "url": "https://youtube.com/shorts/zeZF3DeF45w"
+      }
+    ]
   },
   {
     "creator": "caseoh_",
@@ -1262,9 +1304,23 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795343940,
-    "id": "caseoh_-2935283335-022"
+    "id": "caseoh_-2935283335-022",
+    "note": "instagram:18161688715503905 (https://www.instagram.com/reel/DgFCnF0iqtq/); youtube:5nYPdUm2e_g (https://youtube.com/shorts/5nYPdUm2e_g)",
+    "published_at": 1795425556,
+    "posts": [
+      {
+        "platform": "instagram",
+        "id": "18161688715503905",
+        "url": "https://www.instagram.com/reel/DgFCnF0iqtq/"
+      },
+      {
+        "platform": "youtube",
+        "id": "5nYPdUm2e_g",
+        "url": "https://youtube.com/shorts/5nYPdUm2e_g"
+      }
+    ]
   },
   {
     "creator": "caseoh_",
