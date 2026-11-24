@@ -2155,9 +2155,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795353319,
-    "id": "hasanabi-2936407922-035"
+    "id": "hasanabi-2936407922-035",
+    "note": "facebook:2263069361758618 (https://www.facebook.com/reel/2263069361758618); instagram:18140813134631467 (https://www.instagram.com/reel/DgJGLAAjq4S/); youtube:ySA67Q-BnTY (https://youtube.com/shorts/ySA67Q-BnTY)",
+    "published_at": 1795561626,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "2263069361758618",
+        "url": "https://www.facebook.com/reel/2263069361758618"
+      },
+      {
+        "platform": "instagram",
+        "id": "18140813134631467",
+        "url": "https://www.instagram.com/reel/DgJGLAAjq4S/"
+      },
+      {
+        "platform": "youtube",
+        "id": "ySA67Q-BnTY",
+        "url": "https://youtube.com/shorts/ySA67Q-BnTY"
+      }
+    ]
   },
   {
     "creator": "hasanabi",
@@ -2202,9 +2221,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795353359,
-    "id": "hasanabi-2936407922-036"
+    "id": "hasanabi-2936407922-036",
+    "note": "facebook:28998212849879379 (https://www.facebook.com/reel/28998212849879379); instagram:18167937682499973 (https://www.instagram.com/reel/DgJGaMZEbfH/); youtube:6Hi6nc2rDBk (https://youtube.com/shorts/6Hi6nc2rDBk)",
+    "published_at": 1795561746,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "28998212849879379",
+        "url": "https://www.facebook.com/reel/28998212849879379"
+      },
+      {
+        "platform": "instagram",
+        "id": "18167937682499973",
+        "url": "https://www.instagram.com/reel/DgJGaMZEbfH/"
+      },
+      {
+        "platform": "youtube",
+        "id": "6Hi6nc2rDBk",
+        "url": "https://youtube.com/shorts/6Hi6nc2rDBk"
+      }
+    ]
   },
   {
     "creator": "hasanabi",
@@ -2249,9 +2287,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795353391,
-    "id": "hasanabi-2936407922-037"
+    "id": "hasanabi-2936407922-037",
+    "note": "facebook:1095304336886748 (https://www.facebook.com/reel/1095304336886748); instagram:18231297889326532 (https://www.instagram.com/reel/DgJGkVjE9YI/); youtube:htGyxlz4vOg (https://youtube.com/shorts/htGyxlz4vOg)",
+    "published_at": 1795561826,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1095304336886748",
+        "url": "https://www.facebook.com/reel/1095304336886748"
+      },
+      {
+        "platform": "instagram",
+        "id": "18231297889326532",
+        "url": "https://www.instagram.com/reel/DgJGkVjE9YI/"
+      },
+      {
+        "platform": "youtube",
+        "id": "htGyxlz4vOg",
+        "url": "https://youtube.com/shorts/htGyxlz4vOg"
+      }
+    ]
   },
   {
     "creator": "hasanabi",
@@ -2296,9 +2353,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795353419,
-    "id": "hasanabi-2936407922-038"
+    "id": "hasanabi-2936407922-038",
+    "note": "facebook:1492307072822662 (https://www.facebook.com/reel/1492307072822662); instagram:18612754942064897 (https://www.instagram.com/reel/DgJGurtkoCh/); youtube:xo57UDNzXZU (https://youtube.com/shorts/xo57UDNzXZU)",
+    "published_at": 1795561912,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1492307072822662",
+        "url": "https://www.facebook.com/reel/1492307072822662"
+      },
+      {
+        "platform": "instagram",
+        "id": "18612754942064897",
+        "url": "https://www.instagram.com/reel/DgJGurtkoCh/"
+      },
+      {
+        "platform": "youtube",
+        "id": "xo57UDNzXZU",
+        "url": "https://youtube.com/shorts/xo57UDNzXZU"
+      }
+    ]
   },
   {
     "creator": "hasanabi",
