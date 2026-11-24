@@ -1363,9 +1363,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795343973,
-    "id": "caseoh_-2935283335-023"
+    "id": "caseoh_-2935283335-023",
+    "note": "facebook:1149729341092749 (https://www.facebook.com/reel/1149729341092749); instagram:18122429369058173 (https://www.instagram.com/reel/DgGujtcGcCw/); youtube:NslfsSHlurM (https://youtube.com/shorts/NslfsSHlurM)",
+    "published_at": 1795482151,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1149729341092749",
+        "url": "https://www.facebook.com/reel/1149729341092749"
+      },
+      {
+        "platform": "instagram",
+        "id": "18122429369058173",
+        "url": "https://www.instagram.com/reel/DgGujtcGcCw/"
+      },
+      {
+        "platform": "youtube",
+        "id": "NslfsSHlurM",
+        "url": "https://youtube.com/shorts/NslfsSHlurM"
+      }
+    ]
   },
   {
     "creator": "theburntpeanut",
@@ -1410,9 +1429,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795351705,
-    "id": "theburntpeanut-2936706130-024"
+    "id": "theburntpeanut-2936706130-024",
+    "note": "facebook:1786183039758814 (https://www.facebook.com/reel/1786183039758814); instagram:17956488033317511 (https://www.instagram.com/reel/DgGu0e4gPfN/); youtube:Ydl6DJqBGaY (https://youtube.com/shorts/Ydl6DJqBGaY)",
+    "published_at": 1795482274,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1786183039758814",
+        "url": "https://www.facebook.com/reel/1786183039758814"
+      },
+      {
+        "platform": "instagram",
+        "id": "17956488033317511",
+        "url": "https://www.instagram.com/reel/DgGu0e4gPfN/"
+      },
+      {
+        "platform": "youtube",
+        "id": "Ydl6DJqBGaY",
+        "url": "https://youtube.com/shorts/Ydl6DJqBGaY"
+      }
+    ]
   },
   {
     "creator": "theburntpeanut",
@@ -1457,9 +1495,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795351775,
-    "id": "theburntpeanut-2936706130-025"
+    "id": "theburntpeanut-2936706130-025",
+    "note": "facebook:1159739613183116 (https://www.facebook.com/reel/1159739613183116); instagram:18111897374246690 (https://www.instagram.com/reel/DgGvHiIFP1f/); youtube:nU6jE17qFJc (https://youtube.com/shorts/nU6jE17qFJc)",
+    "published_at": 1795482436,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1159739613183116",
+        "url": "https://www.facebook.com/reel/1159739613183116"
+      },
+      {
+        "platform": "instagram",
+        "id": "18111897374246690",
+        "url": "https://www.instagram.com/reel/DgGvHiIFP1f/"
+      },
+      {
+        "platform": "youtube",
+        "id": "nU6jE17qFJc",
+        "url": "https://youtube.com/shorts/nU6jE17qFJc"
+      }
+    ]
   },
   {
     "creator": "theburntpeanut",
@@ -1504,9 +1561,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795351842,
-    "id": "theburntpeanut-2936706130-026"
+    "id": "theburntpeanut-2936706130-026",
+    "note": "facebook:1622973672349451 (https://www.facebook.com/reel/1622973672349451); instagram:17911517499332951 (https://www.instagram.com/reel/DgGvWBwGQXc/); youtube:Bwv6Ipz1Qfg (https://youtube.com/shorts/Bwv6Ipz1Qfg)",
+    "published_at": 1795482549,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1622973672349451",
+        "url": "https://www.facebook.com/reel/1622973672349451"
+      },
+      {
+        "platform": "instagram",
+        "id": "17911517499332951",
+        "url": "https://www.instagram.com/reel/DgGvWBwGQXc/"
+      },
+      {
+        "platform": "youtube",
+        "id": "Bwv6Ipz1Qfg",
+        "url": "https://youtube.com/shorts/Bwv6Ipz1Qfg"
+      }
+    ]
   },
   {
     "creator": "theburntpeanut",
