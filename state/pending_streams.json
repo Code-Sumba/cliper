@@ -1,11 +1,20 @@
 [
   {
-    "creator": "shreeman_legend_live",
-    "platform": "youtube",
-    "vod_id": "TuAY4o17JLw",
-    "title": "Taking Over the Streets of Vice City In GTA 6 | Day 4",
-    "url": "https://www.youtube.com/watch?v=TuAY4o17JLw",
-    "duration_seconds": 18421,
-    "game": ""
+    "creator": "ohnepixel",
+    "platform": "twitch",
+    "vod_id": "2939324211",
+    "title": "\ud83d\udd34[DROPS] GTA 6 EYETRACKER CHALLENGE\ud83d\udd34",
+    "url": "https://www.twitch.tv/videos/2939324211",
+    "duration_seconds": 15353,
+    "game": "Grand Theft Auto VI"
+  },
+  {
+    "creator": "kaicenat",
+    "platform": "twitch",
+    "vod_id": "2939504732",
+    "title": "KAI VS SPEED: FIRST TO MAKE A MILLION DOLLARS IN GTA 6",
+    "url": "https://www.twitch.tv/videos/2939504732",
+    "duration_seconds": 270,
+    "game": "Just Chatting"
   }
 ]
