@@ -2683,9 +2683,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795354276,
-    "id": "kaicenat-2936683310-043"
+    "id": "kaicenat-2936683310-043",
+    "note": "facebook:1621282956414715 (https://www.facebook.com/reel/1621282956414715); instagram:18155580082554999 (https://www.instagram.com/reel/DgKQsJhPJzC/); youtube:5CrrrbUFrRY (https://youtube.com/shorts/5CrrrbUFrRY)",
+    "published_at": 1795600700,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "1621282956414715",
+        "url": "https://www.facebook.com/reel/1621282956414715"
+      },
+      {
+        "platform": "instagram",
+        "id": "18155580082554999",
+        "url": "https://www.instagram.com/reel/DgKQsJhPJzC/"
+      },
+      {
+        "platform": "youtube",
+        "id": "5CrrrbUFrRY",
+        "url": "https://youtube.com/shorts/5CrrrbUFrRY"
+      }
+    ]
   },
   {
     "creator": "kaicenat",
@@ -2730,9 +2749,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795354315,
-    "id": "kaicenat-2936683310-044"
+    "id": "kaicenat-2936683310-044",
+    "note": "facebook:4430996057164267 (https://www.facebook.com/reel/4430996057164267); instagram:18107006381377435 (https://www.instagram.com/reel/DgKQ5jXgT58/); youtube:Qyn7xfP9zfc (https://youtube.com/shorts/Qyn7xfP9zfc)",
+    "published_at": 1795600811,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "4430996057164267",
+        "url": "https://www.facebook.com/reel/4430996057164267"
+      },
+      {
+        "platform": "instagram",
+        "id": "18107006381377435",
+        "url": "https://www.instagram.com/reel/DgKQ5jXgT58/"
+      },
+      {
+        "platform": "youtube",
+        "id": "Qyn7xfP9zfc",
+        "url": "https://youtube.com/shorts/Qyn7xfP9zfc"
+      }
+    ]
   },
   {
     "creator": "kaicenat",
@@ -2777,9 +2815,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795354349,
-    "id": "kaicenat-2936683310-045"
+    "id": "kaicenat-2936683310-045",
+    "note": "facebook:971400282440768 (https://www.facebook.com/reel/971400282440768); instagram:18167914144428339 (https://www.instagram.com/reel/DgKRF-atJJj/); youtube:IttdYPpNALI (https://youtube.com/shorts/IttdYPpNALI)",
+    "published_at": 1795600899,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "971400282440768",
+        "url": "https://www.facebook.com/reel/971400282440768"
+      },
+      {
+        "platform": "instagram",
+        "id": "18167914144428339",
+        "url": "https://www.instagram.com/reel/DgKRF-atJJj/"
+      },
+      {
+        "platform": "youtube",
+        "id": "IttdYPpNALI",
+        "url": "https://youtube.com/shorts/IttdYPpNALI"
+      }
+    ]
   },
   {
     "creator": "kaicenat",
@@ -2824,9 +2881,28 @@
       "source": "template",
       "extra": {}
     },
-    "status": "approved",
+    "status": "published",
     "created_at": 1795354387,
-    "id": "kaicenat-2936683310-046"
+    "id": "kaicenat-2936683310-046",
+    "note": "facebook:2311320329722850 (https://www.facebook.com/reel/2311320329722850); instagram:18122888101758158 (https://www.instagram.com/reel/DgKRP0ipw5Z/); youtube:CNm2BJ8UcXw (https://youtube.com/shorts/CNm2BJ8UcXw)",
+    "published_at": 1795600981,
+    "posts": [
+      {
+        "platform": "facebook",
+        "id": "2311320329722850",
+        "url": "https://www.facebook.com/reel/2311320329722850"
+      },
+      {
+        "platform": "instagram",
+        "id": "18122888101758158",
+        "url": "https://www.instagram.com/reel/DgKRP0ipw5Z/"
+      },
+      {
+        "platform": "youtube",
+        "id": "CNm2BJ8UcXw",
+        "url": "https://youtube.com/shorts/CNm2BJ8UcXw"
+      }
+    ]
   },
   {
     "creator": "kaicenat",
