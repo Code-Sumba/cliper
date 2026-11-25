@@ -1,5 +1,14 @@
 [
   {
+    "creator": "ishowspeed",
+    "platform": "youtube",
+    "vod_id": "91c96JtcIFg",
+    "title": "\ud83d\udd34FIRST TO MAKE $1 MILLION IN GTA 6 WINS! ft. Kai Cenat \ud83d\udcb0",
+    "url": "https://www.youtube.com/watch?v=91c96JtcIFg",
+    "duration_seconds": 17551,
+    "game": ""
+  },
+  {
     "creator": "shreeman_legend_live",
     "platform": "youtube",
     "vod_id": "4jQafTQ5zRI",
@@ -9,13 +18,22 @@
     "game": ""
   },
   {
+    "creator": "theburntpeanut",
+    "platform": "twitch",
+    "vod_id": "2939866004",
+    "title": "[DROPS] GTA 6 | DAY 6 | GHOSTS & DEMONS & ALIENS | BEST ENDING 100% GARUNTEED | #BUNGULATE",
+    "url": "https://www.twitch.tv/videos/2939866004",
+    "duration_seconds": 7810,
+    "game": "Grand Theft Auto VI"
+  },
+  {
     "creator": "hasanabi",
     "platform": "twitch",
     "vod_id": "2939580472",
     "title": "\ud83d\ude89TRUMPCARE\ud83d\ude89H3 IS OVER?!\ud83d\ude89 JENSEN HUANG\ud83d\ude89ARMY LEAD BOMB OVER IOWA\ud83d\uddfdGTA CH3 CONT\ud83d\uddfd !donate",
     "url": "https://www.twitch.tv/videos/2939580472",
-    "duration_seconds": 8879,
-    "game": "Just Chatting"
+    "duration_seconds": 26790,
+    "game": "Grand Theft Auto VI"
   },
   {
     "creator": "kaicenat",
@@ -23,7 +41,7 @@
     "vod_id": "2939504732",
     "title": "KAI VS SPEED: FIRST TO MAKE A MILLION DOLLARS IN GTA 6",
     "url": "https://www.twitch.tv/videos/2939504732",
-    "duration_seconds": 13846,
+    "duration_seconds": 17889,
     "game": "Grand Theft Auto VI"
   }
 ]
